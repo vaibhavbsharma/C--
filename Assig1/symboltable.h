@@ -5,16 +5,16 @@
 #define MAX_COMMENT_SIZE 100
 #define MAX_COMMENTS_NUM 100
 char comments_arr[MAX_COMMENTS_NUM][MAX_COMMENT_SIZE];
-int comm_idx;
+int num_comments;
 
-#define MAX_ID_SIZE 100
+#define MAX_ID_SIZE 256
 #define MAX_ID_NUM 100
 typedef struct _id_info {
   char id_name[MAX_ID_SIZE];
   int id_freq;
 }id_info;
 id_info symtab[MAX_ID_NUM];
-int id_idx;
+int num_ids;
 
 /* Symbol table management routines */
 void init_symtab();

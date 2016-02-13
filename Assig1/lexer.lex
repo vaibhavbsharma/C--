@@ -60,7 +60,7 @@ FLOAT_CONST (-+)?{digit}*\.?{digit}+((eE)(-+)?{digit}+)?
   tokens++; 
   insert_id(yytext); 
   //printf("found identifier: %s\n",yytext);
-  qsort(symtab,id_idx,sizeof(id_info),id_info_cmp);
+  qsort(symtab,num_ids,sizeof(id_info),id_info_cmp);
 }
 
 "/*"    {//https://www.cs.princeton.edu/~appel/modern/c/software/flex/flex.html
