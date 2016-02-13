@@ -1,12 +1,12 @@
 %option noyywrap 
 %{
 #include <stdio.h>
+#include <string.h>
 #include "symboltable.h"
 
 int linenumber=0;
 int tokens=0;
 int comments=0;
-#define MAX_COMMENT_SIZE 100
 %}
 
 
@@ -53,7 +53,7 @@ ID {letter}({letter}|{digit}|"_")*
                 }
             }
 			printf("Comment = %s\n",this_comment);
-			//call insert_comment here
+			insert_comment(this_comment);
         }
 %%
 
