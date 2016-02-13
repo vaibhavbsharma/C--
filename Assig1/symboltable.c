@@ -23,12 +23,16 @@ void init_comtab()	/* Initialize Comment Table */
 
 void insert_comment(char *comment)	/* Insert comments into Comment Table */
 {
-	strcpy(comments_arr[comm_idx],comment);
-	comm_idx++;
+  strcpy(comments_arr[comm_idx],(const char *)comment);
+  comm_idx++;
 }
 
 void print_comtab()	/* Print Comment Table */
 {
+  int i;
+  for(i=0;i<comm_idx;i++)
+    printf("%s\n",comments_arr[i]);
+  //printf("Comment %d = %s\n",i,comments_arr[i]);
 }
 
 void cleanup_comtab()	/* Clean Comment Table */
