@@ -19,6 +19,7 @@ OPERATOR ("+"|"-"|"*"|"*"|"<"|">"|">="|"<="|"!="|"=="|"||"|"&&"|"!"|"=")
 SEPARATOR ("{"|"}"|"("|")"|"["|"]"|";"|","|".")
 STRING_LITERAL \".*\"
 INT_CONST (digit)+
+FLOAT_CONST (-+)?{digit}*\.?{digit}+((eE)(-+)?{digit}+)?
 %%
 
 
@@ -42,6 +43,16 @@ INT_CONST (digit)+
 {STRING_LITERAL} {
   tokens++;
   printf("found string literal: %s\n",yytext);
+}
+
+{INT_CONST} {
+  tokens++;
+  printf("found integer literal: %s\n",yytext);
+}
+
+{FLOAT_CONST} { //http://www.regular-expressions.info/floatingpoint.html
+  tokens++;
+  printf("found floag literal: %s\n",yytext);
 }
 
 {ID}    { tokens++; insert_id(yytext); printf("found identifier: %s\n",yytext);}
