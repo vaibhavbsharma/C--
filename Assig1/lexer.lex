@@ -14,12 +14,29 @@ letter [A-Za-z]
 digit [0-9]
 elphanum ({letter}|{digit})
 ID {letter}({letter}|{digit}|"_")*
-
-
+RESERVED (return|typedef|if|else|int|float|for|struct|union|void|while)
+OPERATOR ("+"|"-"|"*"|"*"|"<"|">"|">="|"<="|"!="|"=="|"||"|"&&"|"!"|"=")
+SEPARATOR ("{"|"}"|"("|")"|"["|"]"|";"|","|".")
 %%
 
-{ID}    { tokens++; insert_id(yytext); printf("found identifier: %s\n",yytext);}
+
 \n	{++linenumber;}
+
+{OPERATOR} {
+  tokens++;printf("found operator: %s\n",yytext);
+}
+
+{RESERVED} {
+  printf( "found reserved keyword: %s\n", yytext );
+}
+
+
+{SEPARATOR} {
+  printf( "found separator: %s\n", yytext );
+}
+
+{ID}    { tokens++; insert_id(yytext); printf("found identifier: %s\n",yytext);}
+
 "/*"    {//https://www.cs.princeton.edu/~appel/modern/c/software/flex/flex.html
   comments++;
   tokens++;
