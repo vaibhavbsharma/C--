@@ -17,6 +17,8 @@ ID {letter}({letter}|{digit}|"_")*
 RESERVED (return|typedef|if|else|int|float|for|struct|union|void|while)
 OPERATOR ("+"|"-"|"*"|"*"|"<"|">"|">="|"<="|"!="|"=="|"||"|"&&"|"!"|"=")
 SEPARATOR ("{"|"}"|"("|")"|"["|"]"|";"|","|".")
+STRING_LITERAL \".*\"
+INT_CONST (digit)+
 %%
 
 
@@ -28,13 +30,18 @@ SEPARATOR ("{"|"}"|"("|")"|"["|"]"|";"|","|".")
 
 {RESERVED} {
   tokens++;
-  printf( "found reserved keyword: %s\n", yytext );
+  printf("found reserved keyword: %s\n", yytext );
 }
 
 
 {SEPARATOR} {
   tokens++;
-  printf( "found separator: %s\n", yytext );
+  printf("found separator: %s\n", yytext );
+}
+
+{STRING_LITERAL} {
+  tokens++;
+  printf("found string literal: %s\n",yytext);
 }
 
 {ID}    { tokens++; insert_id(yytext); printf("found identifier: %s\n",yytext);}
