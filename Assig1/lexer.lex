@@ -6,7 +6,7 @@
 int linenumber=0;
 int tokens=0;
 int comments=0;
-
+#define MAX_COMMENT_SIZE 100
 %}
 
 
@@ -19,7 +19,42 @@ ID {letter}({letter}|{digit}|"_")*
 %%
 
 {ID}    { tokens++; insert_id(yytext); printf("found identifier: %s\n",yytext);}
+\n		{++linenumber;}
+"/*"    {//https://www.cs.princeton.edu/~appel/modern/c/software/flex/flex.html
+			comments++;
+			char c;
+			int i;
+			char this_comment[MAX_COMMENT_SIZE];
+			for(i=0;i<MAX_COMMENT_SIZE;i++) this_comment[i]='\0';
+			strcat(this_comment,"/*");
+            for ( ; ; )
+            {
+                while ( (c = input()) != '*' &&
+                        c != EOF ) {
+					if(c=='\n') linenumber++;
+					strcat(this_comment,&c);
+                }    /* eat up text of comment */
 
+                if ( c == '*' )
+                {
+					strcat(this_comment,&c);
+                    while ( (c = input()) == '*' ) {
+						strcat(this_comment,&c);
+                    }
+					strcat(this_comment,&c);
+                    if ( c == '/' )
+                        break;    /* found the end */
+                }
+
+                if ( c == EOF )
+                {
+                    printf( "Error: EOF in comment" );
+                    break;
+                }
+            }
+			printf("Comment = %s\n",this_comment);
+			//call insert_comment here
+        }
 %%
 
 int main(int argc, char **argv)
