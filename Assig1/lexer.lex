@@ -27,11 +27,13 @@ SEPARATOR ("{"|"}"|"("|")"|"["|"]"|";"|","|".")
 }
 
 {RESERVED} {
+  tokens++;
   printf( "found reserved keyword: %s\n", yytext );
 }
 
 
 {SEPARATOR} {
+  tokens++;
   printf( "found separator: %s\n", yytext );
 }
 
