@@ -22,6 +22,7 @@ ID {letter}({letter}|{digit}|"_")*
 \n	{++linenumber;}
 "/*"    {//https://www.cs.princeton.edu/~appel/modern/c/software/flex/flex.html
   comments++;
+  tokens++;
   char c;
   int i;
   char this_comment[MAX_COMMENT_SIZE];
