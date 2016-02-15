@@ -14,14 +14,58 @@ letter [A-Za-z]
 digit [0-9]
 elphanum ({letter}|{digit})
 ID {letter}({letter}|{digit}|"_")*
-
-
+RESERVED (return|typedef|if|else|int|float|for|struct|union|void|while)
+OPERATOR ("+"|"-"|"*"|"*"|"<"|">"|">="|"<="|"!="|"=="|"||"|"&&"|"!"|"=")
+SEPARATOR ("{"|"}"|"("|")"|"["|"]"|";"|","|".")
+STRING_LITERAL \".*\"
+INT_CONST (digit)+
+FLOAT_CONST (-+)?{digit}*\.?{digit}+((eE)(-+)?{digit}+)?
 %%
 
-{ID}    { tokens++; insert_id(yytext); printf("found identifier: %s\n",yytext);}
+
 \n	{++linenumber;}
+
+{OPERATOR} {
+  tokens++;
+  //printf("found operator: %s\n",yytext);
+}
+
+{RESERVED} {
+  tokens++;
+  //printf("found reserved keyword: %s\n", yytext );
+}
+
+
+{SEPARATOR} {
+  tokens++;
+  //printf("found separator: %s\n", yytext );
+}
+
+{STRING_LITERAL} {
+  tokens++;
+  //printf("found string literal: %s\n",yytext);
+}
+
+{INT_CONST} {
+  tokens++;
+  //printf("found integer literal: %s\n",yytext);
+}
+
+{FLOAT_CONST} { //http://www.regular-expressions.info/floatingpoint.html
+  tokens++;
+  //printf("found float literal: %s\n",yytext);
+}
+
+{ID}    { 
+  tokens++; 
+  insert_id(yytext); 
+  //printf("found identifier: %s\n",yytext);
+  qsort(symtab,num_ids,sizeof(id_info),id_info_cmp);
+}
+
 "/*"    {//https://www.cs.princeton.edu/~appel/modern/c/software/flex/flex.html
   comments++;
+  tokens++;
   char c;
   int i;
   char this_comment[MAX_COMMENT_SIZE];
@@ -73,6 +117,7 @@ int main(int argc, char **argv)
     else
         yyin = stdin;
     yylex();
+    printf("\n");
     printf("number of tokens %d\n",tokens);
     printf("number of lines %d\n",linenumber);
     printf("There are %d comments:\n",comments);
