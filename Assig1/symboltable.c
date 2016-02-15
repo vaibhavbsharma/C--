@@ -1,7 +1,11 @@
 #include "symboltable.h"
 
-void init_symtab()	/* Initialize Symbol Table */
-{
+
+void insert_symbol(symbol s) {
+}
+
+
+void init_symtab() {
   num_ids=0;
 }
 
@@ -41,6 +45,8 @@ void cleanup_symtab()	/* Clean Symbol Table */
 {
   num_ids=0;
 }
+
+// comment table functions ////////////////////////////////////////////////////
 
 void init_comtab()	/* Initialize Comment Table */
 {
