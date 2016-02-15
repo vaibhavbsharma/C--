@@ -1,6 +1,5 @@
 #include "symboltable.h"
 
-
 symbol_t *new_symbol(char *name) {
     symbol_t *s = (symbol_t *) malloc(sizeof(symbol_t));
     strcpy(s->name, name);
@@ -9,20 +8,16 @@ symbol_t *new_symbol(char *name) {
 }
 
 bool insert_symbol(symbol_t *symbol) {
-    if (sym_table == NULL) {
-        init_symtab();
-    }
-    return ght_insert(sym_table, symbol, sizeof(char)*strlen(symbol->name), 
-            symbol->name) == 0 ? true : false;
+    return h_insert(symbol->name, symbol);
 }
 
 void init_symtab() {
-    sym_table = ght_create(N_SYM_ENTRY);
+    h_init();   // initialize hash table
     num_ids=0;
 }
 
 symbol_t *get_symbol(char *text) {
-    return ght_get(sym_table, strlen(text), text);
+    return h_get(text);
 }
 
 /* Populate Symbol Table */
@@ -41,15 +36,7 @@ void insert_id(char *text) {
 
 /* Print Symbol Table */
 void print_symtab()	{
-    ght_iterator_t iter;
-    void *p_key;
-    void *p_e;
-    for (p_e = ght_first(sym_table, &iter, &p_key);
-            p_e;
-            p_e = ght_next(sym_table, &iter, &p_key)) {
-        symbol_t *symb = (symbol_t*) p_e;
-        printf("symbol: %s\n", symb->name);
-    }
+    //TODO
 }
 
 /* Clean Symbol Table */

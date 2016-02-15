@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include "ght_hash_table.h"
+#include "hashtable.h"
 
 #define MAX_COMMENT_SIZE 100
 #define MAX_COMMENTS_NUM 100
@@ -19,9 +19,6 @@ char comments_arr[MAX_COMMENTS_NUM][MAX_COMMENT_SIZE];
 int num_comments;
 
 int num_ids;
-
-#define N_SYM_ENTRY 100
-ght_hash_table_t *sym_table = NULL;
 
 #define SYM_NAME_LEN 256
 /** A symbol table entry */
