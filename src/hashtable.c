@@ -85,6 +85,23 @@ bool h_insert_entry(entry_t *ent) {
     }
 }
 
+/** Loop-up an entry from the hash table
+ * @param key   the key to search for
+ * @return the pointer of an entry, or NULL if not found
+ */
+entry_t *h_get_entry(char *key) {
+    if (h_table[hash(key)]->index == -1) {
+        return NULL;
+    } else {
+        entry_t *found = ll_search(h_table[hash(key)], key);
+        if (found != NULL) {
+            return found;
+        } else {
+            return NULL;
+        }
+    }
+}
+
 void h_init() {
 #if DEBUG
     printf("h_init()\n");
@@ -111,21 +128,19 @@ bool h_insert(char *key, void *data) {
 }
 
 void *h_get(char *key) {
-    if (h_table[hash(key)]->index == -1) {
-        return NULL;
+    entry_t *found = h_get_entry(key);
+    if (found != NULL) {
+        return found->data;
     } else {
-        entry_t *found = ll_search(h_table[hash(key)], key);
-        if (found != NULL) {
-            return found->data;
-        } else {
-            return NULL;
-        }
+        return NULL;
     }
 }
 
 void **ht_to_list(int *size) {
     int ind = 0;
     void **list = malloc(ht_size * sizeof(void*));
+    /* traverse through the table and copy only 
+     * the pointers to data object to the list */
     for (int i=0; i<HT_SIZ; i++) {
         if (h_table[i]->index == -1) {
             continue;
@@ -144,5 +159,38 @@ void **ht_to_list(int *size) {
     }
 #endif
     return list;
+}
+
+bool h_remove(char *key) {
+    entry_t *found = h_get_entry(key);
+    if (found == NULL) {
+        return false;
+    }
+    /* traverse the linked list of the index `hash(key)` from the head */
+    entry_t *prev = NULL;
+    entry_t *curr = h_table[hash(key)];
+    while (curr != NULL && curr != found) {
+        prev = curr;
+        curr = curr->next;
+    }
+    if (prev != NULL) {
+        /* there is a previous node to link to the next node
+         * : link `prev` to `next` */
+        prev->next = curr->next;
+        free(curr->key);
+        free(curr->data);
+        free(curr);
+    } else {
+        /* there is not; the node to delete is the first one 
+         * in the linked list */
+        // free & initialize
+        free(curr->key);
+        free(curr->data);
+        curr->index = -1;
+        curr->key = NULL;
+        curr->data = NULL;
+        curr->next = NULL;
+    }
+    return true;
 }
 

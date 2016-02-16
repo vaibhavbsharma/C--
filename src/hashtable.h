@@ -45,7 +45,7 @@ void h_init();
  * */
 bool h_insert(char *key, void *data);
 
-/** Retrieve an entry from the hash table
+/** Retrieve a data object that corresponds to a given key from the hash table
  *
  * @param  key key to search for
  * @return the data object of an entry with <tt>key</tt> if found, 
@@ -60,6 +60,25 @@ void *h_get(char *key);
  * @return  list of pointers to data object
  */
 void **ht_to_list(int *size);
+
+/** Remove an entry from the table
+ * @param key  the key to remove 
+ * @return true if successful, false if no element with <tt>key</tt> exists
+ * */
+bool h_remove(char *key);
+
+
+/* ----- other internal (private) functions ----- */
+
+int hash(char *text);
+
+entry_t *ll_search(entry_t *first, char *key);
+
+bool ll_insert(entry_t *first, entry_t *node);
+
+bool h_insert_entry(entry_t *ent);
+
+entry_t *h_get_entry(char *key);
 
 
 #endif
