@@ -16,7 +16,7 @@
  * @return an unsigned integer between 0 and <tt>HT_SIZ</tt>
  * @see HT_SIZ
  * */
-unsigned int hash(char *text) {
+int hash(char *text) {
     unsigned int sum = 0;
     for (int i=0; i<strlen(text); i++) {
         sum += text[i];
@@ -61,6 +61,7 @@ bool ll_insert(entry_t *first, entry_t *node) {
         handle = handle->next;
     }
     handle->next = node;
+    ht_size ++;
     return true;
 }
 
@@ -70,8 +71,14 @@ bool ll_insert(entry_t *first, entry_t *node) {
  * @return true if insertion succeed, false if fail
  */
 bool h_insert_entry(entry_t *ent) {
-    if (h_table[ent->index] == NULL) {
+#if DEBUG
+    printf("h_insert_entry('%s')\n", ent->key);
+#endif
+    if (h_table[ent->index]->index == -1) {
+        // empty
+        free(h_table[ent->index]);
         h_table[ent->index] = ent;
+        ht_size ++;
         return true;
     } else {
         return ll_insert(h_table[ent->index], ent);
@@ -79,15 +86,24 @@ bool h_insert_entry(entry_t *ent) {
 }
 
 void h_init() {
+#if DEBUG
+    printf("h_init()\n");
+#endif
     h_table = malloc(sizeof(entry_t) * HT_SIZ);
     for (int i=0; i<HT_SIZ; i++) {
-        h_table[i] = NULL;
+        h_table[i] = malloc(sizeof(entry_t));
+        h_table[i]->index = -1;
     }
+    ht_size = 0;
 }
 
 bool h_insert(char *key, void *data) {
+#if DEBUG
+    printf("h_insert('%s')\n", key);
+#endif
     entry_t *entry = (entry_t*) malloc(sizeof(entry_t));
     entry->index = hash(key);
+    entry->key = (char*) malloc(strlen(key) * sizeof(char));
     strcpy(entry->key, key);
     entry->data = data;
     entry->next = NULL;
@@ -95,7 +111,7 @@ bool h_insert(char *key, void *data) {
 }
 
 void *h_get(char *key) {
-    if (h_table[hash(key)] == NULL) {
+    if (h_table[hash(key)]->index == -1) {
         return NULL;
     } else {
         entry_t *found = ll_search(h_table[hash(key)], key);
@@ -106,3 +122,27 @@ void *h_get(char *key) {
         }
     }
 }
+
+void **ht_to_list(int *size) {
+    int ind = 0;
+    void **list = malloc(ht_size * sizeof(void*));
+    for (int i=0; i<HT_SIZ; i++) {
+        if (h_table[i]->index == -1) {
+            continue;
+        }
+        entry_t *handle = NULL;
+        do {
+            handle = h_table[i];
+            list[ind++] = handle->data;
+            handle = handle -> next;
+        } while(handle);
+    }
+    *size = ind;
+#if DEBUG 
+    for (int i=0; i<ind; i++) {
+        printf("id: %s\n", (char *) list[i]);
+    }
+#endif
+    return list;
+}
+

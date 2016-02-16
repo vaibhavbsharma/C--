@@ -8,10 +8,12 @@
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
 
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <stdio.h>
 
 /** Hash table size */
 #define HT_SIZ 100
@@ -27,7 +29,9 @@ typedef struct entry_t {
 /** a hash table */
 entry_t **h_table;
 
-/** @brief Initialize the hash table
+int ht_size;
+
+/** Initialize the hash table
 */
 void h_init();
 
@@ -48,5 +52,14 @@ bool h_insert(char *key, void *data);
  *         or <tt>NULL</tt> otherwise.
  * */
 void *h_get(char *key);
+
+/** Retrieve all the entries in the hash table as a list
+ *
+ * @param   size a point to an integer where the size of the returning list
+ *          is to be stored
+ * @return  list of pointers to data object
+ */
+void **ht_to_list(int *size);
+
 
 #endif

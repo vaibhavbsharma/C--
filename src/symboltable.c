@@ -3,7 +3,7 @@
 symbol_t *new_symbol(char *name) {
     symbol_t *s = (symbol_t *) malloc(sizeof(symbol_t));
     strcpy(s->name, name);
-    s -> freq = 0;
+    s->freq = 0;
     return s;
 }
 
@@ -16,27 +16,47 @@ void init_symtab() {
     num_ids=0;
 }
 
-symbol_t *get_symbol(char *text) {
-    return h_get(text);
-}
-
 /* Populate Symbol Table */
 void insert_id(char *text) {
-    if(get_symbol(text) != NULL) {
-        /* already exists */
-        // TODO: increase frequency
+#if DEBUG
+    printf("insert_id(\"%s\")\n", text);
+#endif
+    symbol_t *sym = (symbol_t*) h_get(text);
+    if (sym != NULL) {
+        /* if already exists, increase frequency attr */
+        sym->freq ++;
         return;
     }
-    if(!insert_symbol(new_symbol(text))) {
-        // could not insert
+    if (h_insert(text, new_symbol(text))) {
+        symbol_t *sym = (symbol_t*) h_get(text);
+        sym->freq ++;
+    } else {
+        /* insertion failure (collision) */
         // TODO: error message
     }
     num_ids ++;
 }
 
+/* compare between two sym_t entries */
+int sym_cmp(const void *s1, const void *s2) {
+    symbol_t **_s1 = (symbol_t **) s1;
+    symbol_t **_s2 = (symbol_t **) s2;
+#if DEBUG
+    printf("compare %s %s\n", (*_s1)->name, (*_s2)->name);
+#endif
+    return strcmp((*_s1)->name, (*_s2)->name);
+}
+
 /* Print Symbol Table */
 void print_symtab()	{
-    //TODO
+    int size;   // size of the list of symbols
+    // retrieve all the entries of the hash table
+    symbol_t **sym_list = (symbol_t **) ht_to_list(&size);
+    qsort(sym_list, size, sizeof(symbol_t*), sym_cmp);
+    printf("\nFrequency of identifiers\n");
+    for (int i=0; i<size; i++) {
+        printf("%-10s %2d\n", sym_list[i]->name, sym_list[i]->freq);
+    }
 }
 
 /* Clean Symbol Table */
