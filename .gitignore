@@ -33,3 +33,9 @@
 
 # Temporary files
 *.swp
+
+# lex.yy.c file produced by compiling the flex input file
+lex.yy.c
+
+# lexical analyzer binary
+scanner
