@@ -50,11 +50,12 @@ int sym_cmp(const void *s1, const void *s2) {
 /* Print Symbol Table */
 void print_symtab()	{
     int size;   // size of the list of symbols
+    int i;
     // retrieve all the entries of the hash table
     symbol_t **sym_list = (symbol_t **) ht_to_list(&size);
     qsort(sym_list, size, sizeof(symbol_t*), sym_cmp);
     printf("\nFrequency of identifiers\n");
-    for (int i=0; i<size; i++) {
+    for (i=0; i<size; i++) {
         printf("%-10s %2d\n", sym_list[i]->name, sym_list[i]->freq);
     }
 }

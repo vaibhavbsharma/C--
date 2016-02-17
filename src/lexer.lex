@@ -18,7 +18,7 @@ RESERVED (return|typedef|if|else|int|float|for|struct|union|void|while)
 OPERATOR ("+"|"-"|"*"|"*"|"<"|">"|">="|"<="|"!="|"=="|"||"|"&&"|"!"|"=")
 SEPARATOR ("{"|"}"|"("|")"|"["|"]"|";"|","|".")
 STRING_LITERAL \".*\"
-INT_CONST (digit)+
+INT_CONST (-+)?{digit}+
 FLOAT_CONST (-+)?{digit}*\.?{digit}+((eE)(-+)?{digit}+)?
 %%
 
