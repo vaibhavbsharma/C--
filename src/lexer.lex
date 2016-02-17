@@ -13,13 +13,13 @@ int comments=0;
 letter [A-Za-z]
 digit [0-9]
 elphanum ({letter}|{digit})
-ID {letter}({letter}|{digit}|"_")*
 RESERVED (return|typedef|if|else|int|float|for|struct|union|void|while)
 OPERATOR ("+"|"-"|"*"|"*"|"<"|">"|">="|"<="|"!="|"=="|"||"|"&&"|"!"|"=")
 SEPARATOR ("{"|"}"|"("|")"|"["|"]"|";"|","|".")
 STRING_LITERAL \".*\"
 INT_CONST (-+)?{digit}+
-FLOAT_CONST (-+)?{digit}*\.?{digit}+((eE)(-+)?{digit}+)?
+FLOAT_CONST (-+)?{digit}*\.?{digit}+((e|E)(-+)?{digit}+)?
+ID {letter}({letter}|{digit}|"_")*
 %%
 
 
