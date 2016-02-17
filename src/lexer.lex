@@ -51,7 +51,7 @@ ID {letter}({letter}|{digit}|"_")*
   //printf("found integer literal: %s\n",yytext);
 }
 
-{FLOAT_CONST} { //http://www.regular-expressions.info/floatingpoint.html
+{FLOAT_CONST} { // modified from http://www.regular-expressions.info/floatingpoint.html
   tokens++;
   //printf("found float literal: %s\n",yytext);
 }
@@ -63,7 +63,8 @@ ID {letter}({letter}|{digit}|"_")*
   //qsort(symtab,num_ids,sizeof(id_info),id_info_cmp);
 }
 
-"/*"    {//https://www.cs.princeton.edu/~appel/modern/c/software/flex/flex.html
+"/*"    {
+// Modified from Flex manual: https://www.cs.princeton.edu/~appel/modern/c/software/flex/flex.html
   comments++;
   tokens++;
   char c;
