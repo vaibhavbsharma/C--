@@ -52,7 +52,7 @@ static int linenumber = 1;
 /* ==== Grammar Section ==== */
 
 /* Productions */               /* Semantic actions */
-program		: global_decl_list
+ /*program		: global_decl_list
 		;
 
 global_decl_list: global_decl_list global_decl
@@ -65,6 +65,22 @@ global_decl	: function_decl
 
 function_decl	: 
 		;
+ */
+
+program : decl_list ;
+
+decl_list : decl_list decl
+             | decl
+             ;
+
+decl : type_decl | var_decl;
+
+var_decl : type ID MK_SEMICOLON;
+
+type: INT | FLOAT | VOID | STRUCT ID;
+
+type_decl: STRUCT ID MK_LBRACE decl_list MK_RBRACE MK_SEMICOLON
+           | TYPEDEF type ID MK_SEMICOLON;
 
 %%
 
