@@ -92,8 +92,8 @@ error    .
 {s-const}       {  printf("s-const = %s\n", yytext);return SCONST;}
 {mk_lparen}     return MK_LPAREN;
 {mk_rparen}     { printf("rparen\n"); return MK_RPAREN; }
-{mk_lbrace}     return MK_LBRACE;
-{mk_rbrace}     return MK_RBRACE;
+{mk_lbrace}     { printf("LBRACE\n"); return MK_LBRACE; }
+{mk_rbrace}     { printf("RBRACE\n"); return MK_RBRACE; }
 {mk_lsqbrace}   return MK_LB;
 {mk_rsqbrace}   return MK_RB;
 {mk_comma}      return MK_COMMA;

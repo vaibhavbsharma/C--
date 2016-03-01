@@ -94,31 +94,56 @@ stmt_list: stmt_list stmt  {printf("stmt_list: stmt_list stmt\n");}
            |
 ;
 
-param_list: param_list MK_COMMA var_decl  {printf("param_list: param_list MK_COMMA var_decl\n");}
-            | var_decl {printf("param_list: var_decl\n");}
-            |
+param_list: 
+param_var_decl {printf("param_list: param_var_decl\n");}
+| param_list MK_COMMA param_var_decl {printf("param_list: param_list, param_var_decl\n");}
+|
 ; 
+
+param_var_decl : param_type param_id_list
+;
+
+param_id_list: ID param_id_tail  
+;
+
+param_id_tail: MK_LB CONST MK_RB param_id_tail
+| MK_LB MK_RB param_id_tail
+|
+;
+
+param_type: INT | FLOAT | VOID | STRUCT ID
+;
 
 stmt: 
 MK_LBRACE block MK_RBRACE {printf("stmt: {block}\n");}
 | IF MK_LPAREN expr MK_RPAREN stmt  {printf("stmt: if(expr) stmt\n");}
-/*| IF MK_LPAREN expr MK_RPAREN stmt ELSE stmt*/
-| WHILE MK_LPAREN expr MK_RPAREN stmt {printf("while\n");}  {printf("stmt: while(expr) stmt\n");}
-| FOR MK_LPAREN assign_expr expr MK_SEMICOLON expr MK_SEMICOLON MK_RPAREN stmt {printf("stmt: for(assign_expr expr expr) stmt\n");} 
+| IF MK_LPAREN expr MK_RPAREN stmt ELSE stmt  {printf("stmt: if(expr) { stmt_list } else {stmt_list }\n");}
+| WHILE MK_LPAREN expr MK_RPAREN stmt {printf("stmt: while(expr) stmt\n");}
+| FOR MK_LPAREN assign_expr expr MK_SEMICOLON expr MK_RPAREN stmt {printf("stmt: for(assign_expr expr expr) stmt\n");} 
 | assign_expr {printf("stmt: assign_expr\n");}
 | WRITE MK_LPAREN SCONST MK_RPAREN MK_SEMICOLON {printf("stmt: write called at %d\n", linenumber);}
+| RETURN expr MK_SEMICOLON {printf("stmt: return expr;");}
 | error { printf("Error in stmt production \n"); }
 /* other C-- statements */
 ;
 
 assign_expr: 
-ID OP_ASSIGN expr MK_SEMICOLON {printf("id=expr;\n");}
-| ID OP_ASSIGN READ MK_LPAREN MK_RPAREN MK_SEMICOLON {printf("id=read();\n");}
-| ID OP_ASSIGN FREAD MK_LPAREN MK_RPAREN MK_SEMICOLON {printf("id=fread();\n");}
+lhs OP_ASSIGN expr MK_SEMICOLON {printf("id=expr;\n");}
+| lhs OP_ASSIGN READ MK_LPAREN MK_RPAREN MK_SEMICOLON {printf("id=read();\n");}
+| lhs OP_ASSIGN FREAD MK_LPAREN MK_RPAREN MK_SEMICOLON {printf("id=fread();\n");}
 ;
 
-expr:  expr binop ID {printf("expr: expr binop ID\n");}
-/*| unop expr {printf("expr: unop expr\n");}*/
+lhs: ID id_tail lhs_member
+;
+
+lhs_member: MK_DOT lhs
+|
+;
+
+
+expr: MK_LPAREN expr MK_RPAREN {printf("expr: (expr)\n");}  
+| expr binop ID {printf("expr: expr binop ID\n");}
+| unop expr {printf("expr: unop expr\n");}
 | expr binop CONST  {printf("expr: expr binop CONST\n");}
 | ID  {printf("expr: ID\n");}
 | CONST {printf("expr: CONST\n");}
@@ -128,25 +153,38 @@ binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE |
        OP_PLUS | OP_MINUS | OP_TIMES | OP_DIVIDE
 ;
 
-/*unop: OP_NOT
+unop: OP_NOT
 ;
-*/
+
 decl_list : decl_list decl
-             | decl
+| decl
+|
 ;
 
 decl : type_decl MK_SEMICOLON 
        | var_decl
 ;
 
-var_decl : type id_list 
+var_decl : type id_list MK_SEMICOLON
 ;
 
-id_list: ID MK_COMMA id_list
-         | ID MK_SEMICOLON
+id_list: ID id_tail id_list_tail 
 ;
 
-type: INT | FLOAT | VOID | STRUCT ID
+id_list_tail: MK_COMMA id_list
+|
+;
+
+id_tail: MK_LB CONST MK_RB id_tail
+|
+;
+
+type: INT | FLOAT | VOID | STRUCT ID struct_block
+;
+
+struct_block:
+MK_LBRACE decl_list MK_RBRACE
+|
 ;
 
 type_decl: STRUCT ID MK_LBRACE decl_list MK_RBRACE 
