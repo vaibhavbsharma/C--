@@ -117,7 +117,6 @@ param_type: INT | FLOAT | VOID | STRUCT ID
 stmt: 
 MK_LBRACE block MK_RBRACE {printf("stmt: {block}\n");}
 | IF MK_LPAREN expr MK_RPAREN stmt else_tail {printf("stmt: if(expr) stmt\n");}
-/*| IF MK_LPAREN expr MK_RPAREN stmt ELSE stmt  {printf("stmt: if(expr) { stmt_list } else {stmt_list }\n");}*/
 | WHILE MK_LPAREN expr MK_RPAREN stmt {printf("stmt: while(expr) stmt\n");}
 | FOR MK_LPAREN assign_expr MK_SEMICOLON expr MK_SEMICOLON assign_expr MK_RPAREN stmt {printf("stmt: for(assign_expr expr expr) stmt\n");} 
 | assign_expr MK_SEMICOLON {printf("stmt: assign_expr\n");}
@@ -128,7 +127,7 @@ MK_LBRACE block MK_RBRACE {printf("stmt: {block}\n");}
 ;
 
 else_tail:
-ELSE stmt
+ELSE stmt {printf("stmt: if(expr) { stmt } else { stmt} \n");} 
 |
 ;
 
@@ -195,13 +194,15 @@ id_tail: MK_LB CONST MK_RB id_tail
 |
 ;
 
-type: INT | FLOAT | VOID | STRUCT ID struct_block
+type: INT | FLOAT | VOID | STRUCT ID struct_or_null_block | STRUCT struct_block
 ;
 
-struct_block:
+struct_or_null_block:
 MK_LBRACE decl_list MK_RBRACE
 |
 ;
+
+struct_block: MK_LBRACE decl_list MK_RBRACE;
 
 type_decl: STRUCT ID MK_LBRACE decl_list MK_RBRACE 
            | TYPEDEF type ID 
