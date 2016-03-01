@@ -67,20 +67,52 @@ function_decl	:
 		;
  */
 
-program : decl_list ;
+program : global_decl_list;
+
+global_decl_list: global_decl_list global_decl
+                  | 
+;
+
+global_decl : decl_list function_decl
+;
+
+function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE block MK_RBRACE
+;
+
+block: decl_list stmt_list
+       |
+;
+
+stmt_list: stmt_list stmt
+           |
+;
+
+param_list: param_list MK_COMMA var_decl
+            | var_decl
+; 
+
+stmt: MK_LPAREN block MK_RPAREN
+;
 
 decl_list : decl_list decl
              | decl
              ;
 
-decl : type_decl | var_decl;
+decl : type_decl MK_SEMICOLON 
+       | var_decl MK_SEMICOLON;
 
-var_decl : type ID MK_SEMICOLON;
+var_decl : type id_list 
+;
+
+id_list: id_list MK_COMMA ID
+         | ID
+;
 
 type: INT | FLOAT | VOID | STRUCT ID;
 
-type_decl: STRUCT ID MK_LBRACE decl_list MK_RBRACE MK_SEMICOLON
-           | TYPEDEF type ID MK_SEMICOLON;
+type_decl: STRUCT ID MK_LBRACE decl_list MK_RBRACE 
+           | TYPEDEF type ID 
+;
 
 %%
 
