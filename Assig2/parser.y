@@ -116,36 +116,52 @@ param_type: INT | FLOAT | VOID | STRUCT ID
 
 stmt: 
 MK_LBRACE block MK_RBRACE {printf("stmt: {block}\n");}
-| IF MK_LPAREN expr MK_RPAREN stmt  {printf("stmt: if(expr) stmt\n");}
-| IF MK_LPAREN expr MK_RPAREN stmt ELSE stmt  {printf("stmt: if(expr) { stmt_list } else {stmt_list }\n");}
+| IF MK_LPAREN expr MK_RPAREN stmt else_tail {printf("stmt: if(expr) stmt\n");}
+/*| IF MK_LPAREN expr MK_RPAREN stmt ELSE stmt  {printf("stmt: if(expr) { stmt_list } else {stmt_list }\n");}*/
 | WHILE MK_LPAREN expr MK_RPAREN stmt {printf("stmt: while(expr) stmt\n");}
-| FOR MK_LPAREN assign_expr expr MK_SEMICOLON expr MK_RPAREN stmt {printf("stmt: for(assign_expr expr expr) stmt\n");} 
-| assign_expr {printf("stmt: assign_expr\n");}
+| FOR MK_LPAREN assign_expr MK_SEMICOLON expr MK_SEMICOLON assign_expr MK_RPAREN stmt {printf("stmt: for(assign_expr expr expr) stmt\n");} 
+| assign_expr MK_SEMICOLON {printf("stmt: assign_expr\n");}
 | WRITE MK_LPAREN SCONST MK_RPAREN MK_SEMICOLON {printf("stmt: write called at %d\n", linenumber);}
 | RETURN expr MK_SEMICOLON {printf("stmt: return expr;");}
 | error { printf("Error in stmt production \n"); }
 /* other C-- statements */
 ;
 
+else_tail:
+ELSE stmt
+|
+;
+
 assign_expr: 
-lhs OP_ASSIGN expr MK_SEMICOLON {printf("id=expr;\n");}
-| lhs OP_ASSIGN READ MK_LPAREN MK_RPAREN MK_SEMICOLON {printf("id=read();\n");}
-| lhs OP_ASSIGN FREAD MK_LPAREN MK_RPAREN MK_SEMICOLON {printf("id=fread();\n");}
+lhs OP_ASSIGN assign_expr_tail 
 ;
 
-lhs: ID id_tail lhs_member
+assign_expr_tail:
+expr  {printf("id=expr;\n");}
+| READ MK_LPAREN MK_RPAREN {printf("id=read();\n");} 
+| FREAD MK_LPAREN MK_RPAREN {printf("id=fread();\n");}
 ;
 
-lhs_member: MK_DOT lhs
+lhs: ID expr_id_tail expr_member
+;
+
+
+expr_id_tail: MK_LB CONST MK_RB expr_id_tail
+| MK_LB ID MK_RB expr_id_tail
+|
+;
+
+expr_member: MK_DOT lhs
 |
 ;
 
 
-expr: MK_LPAREN expr MK_RPAREN {printf("expr: (expr)\n");}  
-| expr binop ID {printf("expr: expr binop ID\n");}
+expr: lhs {printf("expr: lhs\n");}
+| MK_LPAREN expr MK_RPAREN {printf("expr: (expr)\n");}  
+| expr binop lhs {printf("expr: expr binop ID\n");}
 | unop expr {printf("expr: unop expr\n");}
 | expr binop CONST  {printf("expr: expr binop CONST\n");}
-| ID  {printf("expr: ID\n");}
+/*| ID  {printf("expr: ID\n");}*/
 | CONST {printf("expr: CONST\n");}
 ;
 
