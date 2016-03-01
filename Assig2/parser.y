@@ -10,6 +10,7 @@ static int linenumber = 1;
 
 %token ID
 %token CONST
+%token SCONST
 %token VOID    
 %token INT     
 %token FLOAT   
@@ -18,7 +19,12 @@ static int linenumber = 1;
 %token WHILE   
 %token FOR
 %token STRUCT  
-%token TYPEDEF 
+%token TYPEDEF
+
+%token READ
+%token FREAD
+%token WRITE
+
 %token OP_ASSIGN  
 %token OP_OR   
 %token OP_AND  
@@ -73,42 +79,75 @@ global_decl_list: global_decl_list global_decl
                   | 
 ;
 
-global_decl : decl_list function_decl
+global_decl : decl_list function_decl |
+              function_decl
 ;
 
-function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE block MK_RBRACE
+function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE block MK_RBRACE {printf("function_decl\n");}
 ;
 
-block: decl_list stmt_list
+block: decl_list stmt_list  {printf("bloc: decl_list stmt_list \n");}
        |
 ;
 
-stmt_list: stmt_list stmt
+stmt_list: stmt_list stmt  {printf("stmt_list: stmt_list stmt\n");}
            |
 ;
 
-param_list: param_list MK_COMMA var_decl
-            | var_decl
+param_list: param_list MK_COMMA var_decl  {printf("param_list: param_list MK_COMMA var_decl\n");}
+            | var_decl {printf("param_list: var_decl\n");}
+            |
 ; 
 
-stmt: MK_LPAREN block MK_RPAREN
+stmt: 
+MK_LBRACE block MK_RBRACE {printf("stmt: {block}\n");}
+| IF MK_LPAREN expr MK_RPAREN stmt  {printf("stmt: if(expr) stmt\n");}
+/*| IF MK_LPAREN expr MK_RPAREN stmt ELSE stmt*/
+| WHILE MK_LPAREN expr MK_RPAREN stmt {printf("while\n");}  {printf("stmt: while(expr) stmt\n");}
+| FOR MK_LPAREN assign_expr expr MK_SEMICOLON expr MK_SEMICOLON MK_RPAREN stmt {printf("stmt: for(assign_expr expr expr) stmt\n");} 
+| assign_expr {printf("stmt: assign_expr\n");}
+| WRITE MK_LPAREN SCONST MK_RPAREN MK_SEMICOLON {printf("stmt: write called at %d\n", linenumber);}
+| error { printf("Error in stmt production \n"); }
+/* other C-- statements */
 ;
 
+assign_expr: 
+ID OP_ASSIGN expr MK_SEMICOLON {printf("id=expr;\n");}
+| ID OP_ASSIGN READ MK_LPAREN MK_RPAREN MK_SEMICOLON {printf("id=read();\n");}
+| ID OP_ASSIGN FREAD MK_LPAREN MK_RPAREN MK_SEMICOLON {printf("id=fread();\n");}
+;
+
+expr:  expr binop ID {printf("expr: expr binop ID\n");}
+/*| unop expr {printf("expr: unop expr\n");}*/
+| expr binop CONST  {printf("expr: expr binop CONST\n");}
+| ID  {printf("expr: ID\n");}
+| CONST {printf("expr: CONST\n");}
+;
+
+binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE | 
+       OP_PLUS | OP_MINUS | OP_TIMES | OP_DIVIDE
+;
+
+/*unop: OP_NOT
+;
+*/
 decl_list : decl_list decl
              | decl
-             ;
+;
 
 decl : type_decl MK_SEMICOLON 
-       | var_decl MK_SEMICOLON;
+       | var_decl
+;
 
 var_decl : type id_list 
 ;
 
-id_list: id_list MK_COMMA ID
-         | ID
+id_list: ID MK_COMMA id_list
+         | ID MK_SEMICOLON
 ;
 
-type: INT | FLOAT | VOID | STRUCT ID;
+type: INT | FLOAT | VOID | STRUCT ID
+;
 
 type_decl: STRUCT ID MK_LBRACE decl_list MK_RBRACE 
            | TYPEDEF type ID 

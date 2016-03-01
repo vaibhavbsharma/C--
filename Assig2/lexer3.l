@@ -18,6 +18,10 @@ kwUnion  "union"
 kwTypedef "typedef"
 kwReturn "return"
 
+libRead "read"
+libFRead "fread"
+libWrite "write"
+
 ID       ({letter})({letter}|{digit}|"_")*
 op_assign        "="
 op_or   "||"
@@ -64,6 +68,11 @@ error    .
 {kwUnion}	return STRUCT;
 {kwTypedef}     return TYPEDEF;
 {kwReturn}      return RETURN;
+
+{libRead}       return READ;
+{libFRead}      return FREAD;
+{libWrite}      return WRITE;
+
 {ID}            { return ID; }
 {op_assign}     return OP_ASSIGN; 
 {op_and}        return OP_AND;
@@ -79,10 +88,10 @@ error    .
 {op_minus}      return OP_MINUS;
 {op_times}      return OP_TIMES;
 {op_divide}     return OP_DIVIDE;
-{constant}      {  return CONST;}
-{s-const}       {  return CONST;}
+{constant}      {  printf("const = %s\n", yytext); return CONST;}
+{s-const}       {  printf("s-const = %s\n", yytext);return SCONST;}
 {mk_lparen}     return MK_LPAREN;
-{mk_rparen}     return MK_RPAREN;
+{mk_rparen}     { printf("rparen\n"); return MK_RPAREN; }
 {mk_lbrace}     return MK_LBRACE;
 {mk_rbrace}     return MK_RBRACE;
 {mk_lsqbrace}   return MK_LB;
