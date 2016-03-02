@@ -120,7 +120,8 @@ MK_LBRACE block MK_RBRACE {printf("stmt: {block}\n");}
 | WHILE MK_LPAREN expr MK_RPAREN stmt {printf("stmt: while(expr) stmt\n");}
 | FOR MK_LPAREN assign_expr MK_SEMICOLON expr MK_SEMICOLON assign_expr MK_RPAREN stmt {printf("stmt: for(assign_expr expr expr) stmt\n");} 
 | assign_expr MK_SEMICOLON {printf("stmt: assign_expr\n");}
-| WRITE MK_LPAREN SCONST MK_RPAREN MK_SEMICOLON {printf("stmt: write called at %d\n", linenumber);}
+| WRITE MK_LPAREN SCONST MK_RPAREN MK_SEMICOLON {printf("stmt: write string constant called at %d\n", linenumber);}
+| WRITE MK_LPAREN lhs MK_RPAREN MK_SEMICOLON {printf("stmt: write lhs called at %d\n", linenumber);}
 | RETURN expr MK_SEMICOLON {printf("stmt: return expr;");}
 | error { printf("Error in stmt production \n"); }
 /* other C-- statements */
@@ -136,9 +137,23 @@ lhs OP_ASSIGN assign_expr_tail
 ;
 
 assign_expr_tail:
-expr  {printf("id=expr;\n");}
-| READ MK_LPAREN MK_RPAREN {printf("id=read();\n");} 
-| FREAD MK_LPAREN MK_RPAREN {printf("id=fread();\n");}
+expr  {printf("lhs=expr\n");}
+| READ MK_LPAREN MK_RPAREN {printf("lhs=read()\n");} 
+| FREAD MK_LPAREN MK_RPAREN {printf("lhs=fread()\n");}
+| function_call {printf("lhs=function_call\n");}
+;
+
+function_call: ID MK_LPAREN call_param_list MK_RPAREN
+;
+
+call_param_list: lhs call_param_list_tail
+| CONST call_param_list_tail
+|
+;
+
+call_param_list_tail: MK_COMMA lhs call_param_list_tail
+| MK_COMMA CONST call_param_list_tail
+|
 ;
 
 lhs: ID expr_id_tail expr_member
@@ -157,9 +172,9 @@ expr_member: MK_DOT lhs
 
 expr: lhs {printf("expr: lhs\n");}
 | MK_LPAREN expr MK_RPAREN {printf("expr: (expr)\n");}  
-| expr binop lhs {printf("expr: expr binop ID\n");}
+| expr binop expr {printf("expr: expr binop expr\n");}
 | unop expr {printf("expr: unop expr\n");}
-| expr binop CONST  {printf("expr: expr binop CONST\n");}
+/*| expr binop CONST  {printf("expr: expr binop CONST\n");}*/
 /*| ID  {printf("expr: ID\n");}*/
 | CONST {printf("expr: CONST\n");}
 ;
@@ -168,7 +183,7 @@ binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE |
        OP_PLUS | OP_MINUS | OP_TIMES | OP_DIVIDE
 ;
 
-unop: OP_NOT
+unop: OP_NOT | OP_MINUS
 ;
 
 decl_list : decl_list decl
@@ -191,6 +206,7 @@ id_list_tail: MK_COMMA id_list
 ;
 
 id_tail: MK_LB CONST MK_RB id_tail
+| OP_ASSIGN CONST
 |
 ;
 
