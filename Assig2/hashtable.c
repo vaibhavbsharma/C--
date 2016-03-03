@@ -18,7 +18,8 @@
  * */
 int hash(char *text) {
     unsigned int sum = 0;
-    for (int i=0; i<strlen(text); i++) {
+    int i;
+    for (i=0; i<strlen(text); i++) {
         sum += text[i];
     }
     return sum % HT_SIZ;
@@ -107,7 +108,8 @@ void h_init() {
     printf("h_init()\n");
 #endif
     h_table = malloc(sizeof(entry_t) * HT_SIZ);
-    for (int i=0; i<HT_SIZ; i++) {
+    int i;
+    for (i=0; i<HT_SIZ; i++) {
         h_table[i] = malloc(sizeof(entry_t));
         h_table[i]->index = -1;
     }
@@ -138,10 +140,11 @@ void *h_get(char *key) {
 
 void **ht_to_list(int *size) {
     int ind = 0;
+    int i;
     void **list = malloc(ht_size * sizeof(void*));
     /* traverse through the table and copy only 
      * the pointers to data object to the list */
-    for (int i=0; i<HT_SIZ; i++) {
+    for (i=0; i<HT_SIZ; i++) {
         if (h_table[i]->index == -1) {
             continue;
         }
@@ -154,7 +157,7 @@ void **ht_to_list(int *size) {
     }
     *size = ind;
 #if DEBUG 
-    for (int i=0; i<ind; i++) {
+    for (i=0; i<ind; i++) {
         printf("id: %s\n", (char *) list[i]);
     }
 #endif
