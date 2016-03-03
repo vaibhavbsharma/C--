@@ -230,7 +230,8 @@ typedef_decl: TYPEDEF type ID
             { 
 if (DEBUG) 
     printf("inserting %s\n", $3); 
-insert_type($3); }
+    insert_type($3); 
+}
 ;
 
 %%
