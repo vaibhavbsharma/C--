@@ -1,8 +1,12 @@
 /*lexer file*/
 
 %{
+#ifndef DEBUG
+#define DEBUG false
+#endif
 #include <stdio.h>
-
+#include "table.h"
+#include "common.h"
 %}
 letter   [A-Za-z]
 digit    [0-9]
@@ -73,7 +77,17 @@ error    .
 {libFRead}      return FREAD;
 {libWrite}      return WRITE;
 
-{ID}            { return ID; }
+{ID}            { 
+    yylval = yytext;
+    if (is_type_exists(yytext)) {
+        if (DEBUG) {
+            printf("%s is a user defined type\n", yytext);
+        }
+        return TYPEDEF_NAME;
+    } else {
+        return ID; 
+    }
+    }
 {op_assign}     return OP_ASSIGN; 
 {op_and}        return OP_AND;
 {op_or}         return OP_OR;
@@ -88,12 +102,15 @@ error    .
 {op_minus}      return OP_MINUS;
 {op_times}      return OP_TIMES;
 {op_divide}     return OP_DIVIDE;
-{constant}      {  printf("const = %s\n", yytext); return CONST;}
-{s-const}       {  printf("s-const = %s\n", yytext);return SCONST;}
+{constant}      {  
+    yylval = yytext; 
+    return CONST;
+    }
+{s-const}       { return SCONST;}
 {mk_lparen}     return MK_LPAREN;
-{mk_rparen}     { printf("rparen\n"); return MK_RPAREN; }
-{mk_lbrace}     { printf("LBRACE\n"); return MK_LBRACE; }
-{mk_rbrace}     { printf("RBRACE\n"); return MK_RBRACE; }
+{mk_rparen}     { return MK_RPAREN; }
+{mk_lbrace}     { return MK_LBRACE; }
+{mk_rbrace}     { return MK_RBRACE; }
 {mk_lsqbrace}   return MK_LB;
 {mk_rsqbrace}   return MK_RB;
 {mk_comma}      return MK_COMMA;

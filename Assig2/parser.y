@@ -1,14 +1,16 @@
 /* ===== Definition Section ===== */
 
 %{
+#include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "table.h"
 static int linenumber = 1;
 %}
 
-
 %token ID
+%token TYPEDEF_NAME
 %token CONST
 %token SCONST
 %token VOID    
@@ -83,20 +85,20 @@ global_decl : decl_list function_decl |
               function_decl
 ;
 
-function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE block MK_RBRACE {printf("function_decl\n");}
+function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE block MK_RBRACE {if(DEBUG) printf("function_decl\n");}
 ;
 
-block: decl_list stmt_list  {printf("bloc: decl_list stmt_list \n");}
+block: decl_list stmt_list  {if(DEBUG) printf("bloc: decl_list stmt_list \n");}
        |
 ;
 
-stmt_list: stmt_list stmt  {printf("stmt_list: stmt_list stmt\n");}
+stmt_list: stmt_list stmt  {if(DEBUG) printf("stmt_list: stmt_list stmt\n");}
            |
 ;
 
 param_list: 
-param_var_decl {printf("param_list: param_var_decl\n");}
-| param_list MK_COMMA param_var_decl {printf("param_list: param_list, param_var_decl\n");}
+param_var_decl {if(DEBUG) printf("param_list: param_var_decl\n");}
+| param_list MK_COMMA param_var_decl {if(DEBUG) printf("param_list: param_list, param_var_decl\n");}
 |
 ; 
 
@@ -115,20 +117,20 @@ param_type: INT | FLOAT | VOID | STRUCT ID
 ;
 
 stmt: 
-MK_LBRACE block MK_RBRACE {printf("stmt: {block}\n");}
-| IF MK_LPAREN expr MK_RPAREN stmt else_tail {printf("stmt: if(expr) stmt\n");}
-| WHILE MK_LPAREN expr MK_RPAREN stmt {printf("stmt: while(expr) stmt\n");}
-| FOR MK_LPAREN assign_expr MK_SEMICOLON expr MK_SEMICOLON assign_expr MK_RPAREN stmt {printf("stmt: for(assign_expr expr expr) stmt\n");} 
-| assign_expr MK_SEMICOLON {printf("stmt: assign_expr\n");}
-| WRITE MK_LPAREN SCONST MK_RPAREN MK_SEMICOLON {printf("stmt: write string constant called at %d\n", linenumber);}
-| WRITE MK_LPAREN lhs MK_RPAREN MK_SEMICOLON {printf("stmt: write lhs called at %d\n", linenumber);}
-| RETURN expr MK_SEMICOLON {printf("stmt: return expr;");}
-| error { printf("Error in stmt production \n"); }
+MK_LBRACE block MK_RBRACE {if(DEBUG) printf("stmt: {block}\n");}
+| IF MK_LPAREN expr MK_RPAREN stmt else_tail {if(DEBUG) printf("stmt: if(expr) stmt\n");}
+| WHILE MK_LPAREN expr MK_RPAREN stmt {if(DEBUG) printf("stmt: while(expr) stmt\n");}
+| FOR MK_LPAREN assign_expr MK_SEMICOLON expr MK_SEMICOLON assign_expr MK_RPAREN stmt {if(DEBUG) printf("stmt: for(assign_expr expr expr) stmt\n");} 
+| assign_expr MK_SEMICOLON {if(DEBUG) printf("stmt: assign_expr\n");}
+| WRITE MK_LPAREN SCONST MK_RPAREN MK_SEMICOLON {if(DEBUG) printf("stmt: write string constant called at %d\n", linenumber);}
+| WRITE MK_LPAREN lhs MK_RPAREN MK_SEMICOLON {if(DEBUG) printf("stmt: write lhs called at %d\n", linenumber);}
+| RETURN expr MK_SEMICOLON {if(DEBUG) printf("stmt: return expr;");}
+| error {if(DEBUG)  printf("Error in stmt production \n"); }
 /* other C-- statements */
 ;
 
 else_tail:
-ELSE stmt {printf("stmt: if(expr) { stmt } else { stmt} \n");} 
+ELSE stmt {if(DEBUG) printf("stmt: if(expr) { stmt } else { stmt} \n");} 
 |
 ;
 
@@ -137,10 +139,10 @@ lhs OP_ASSIGN assign_expr_tail
 ;
 
 assign_expr_tail:
-expr  {printf("lhs=expr\n");}
-| READ MK_LPAREN MK_RPAREN {printf("lhs=read()\n");} 
-| FREAD MK_LPAREN MK_RPAREN {printf("lhs=fread()\n");}
-| function_call {printf("lhs=function_call\n");}
+expr  {if(DEBUG) printf("lhs=expr\n");}
+| READ MK_LPAREN MK_RPAREN {if(DEBUG) printf("lhs=read()\n");} 
+| FREAD MK_LPAREN MK_RPAREN {if(DEBUG) printf("lhs=fread()\n");}
+| function_call {if(DEBUG) printf("lhs=function_call\n");}
 ;
 
 function_call: ID MK_LPAREN call_param_list MK_RPAREN
@@ -170,13 +172,13 @@ expr_member: MK_DOT lhs
 ;
 
 
-expr: lhs {printf("expr: lhs\n");}
-| MK_LPAREN expr MK_RPAREN {printf("expr: (expr)\n");}  
-| expr binop expr {printf("expr: expr binop expr\n");}
-| unop expr {printf("expr: unop expr\n");}
+expr: lhs {if(DEBUG) printf("expr: lhs\n");}
+| MK_LPAREN expr MK_RPAREN {if(DEBUG) printf("expr: (expr)\n");}  
+| expr binop expr {if(DEBUG) printf("expr: expr binop expr\n");}
+| unop expr {if(DEBUG) printf("expr: unop expr\n");}
 /*| expr binop CONST  {printf("expr: expr binop CONST\n");}*/
 /*| ID  {printf("expr: ID\n");}*/
-| CONST {printf("expr: CONST\n");}
+| CONST {if(DEBUG) printf("expr: CONST\n");}
 ;
 
 binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE | 
@@ -210,7 +212,7 @@ id_tail: MK_LB CONST MK_RB id_tail
 |
 ;
 
-type: INT | FLOAT | VOID | STRUCT ID struct_or_null_block | STRUCT struct_block
+type: INT | FLOAT | VOID | TYPEDEF_NAME | STRUCT ID struct_or_null_block | STRUCT struct_block
 ;
 
 struct_or_null_block:
@@ -220,8 +222,15 @@ MK_LBRACE decl_list MK_RBRACE
 
 struct_block: MK_LBRACE decl_list MK_RBRACE;
 
-type_decl: STRUCT ID MK_LBRACE decl_list MK_RBRACE 
-           | TYPEDEF type ID 
+type_decl: struct_decl | typedef_decl;
+
+struct_decl: STRUCT ID MK_LBRACE decl_list MK_RBRACE;
+
+typedef_decl: TYPEDEF type ID 
+            { 
+if (DEBUG) 
+    printf("inserting %s\n", $3); 
+insert_type($3); }
 ;
 
 %%
@@ -231,6 +240,7 @@ main (argc, argv)
 int argc;
 char *argv[];
   {
+        init();
      	yyin = fopen(argv[1],"r");
      	yyparse();
      	printf("%s\n", "Parsing completed. No errors found.");
