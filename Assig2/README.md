@@ -44,4 +44,8 @@ but can be placed in the position of `type`s only after it is declared with
 (we got hint of handling `typedef`s from the *ANSI C Yacc Grammar* presented in
 [this page](http://www.quut.com/c/ANSI-C-grammar-y.html#constant_expression).
 
+Production rules for parsing C-- code
+-------------------------------------
 
+The production rules were adapted from sample Context Free Grammar shown in the slides during the lecture. These rules are present in parser.y. They allow a program to be described as a global declaration list which consists of a type and variable declaration list along with a function declaration list. Function declarations can further contain variable declarations along with C-- statements. Functions may not take any parameters and may contain conditional statements, assignment statements and return statements. Statements allow expressions which can index into arrays and refer to member variables of a structure.
+Debug information printed by these statements can be ignored and replaced by creation of corresponding semantic records.
