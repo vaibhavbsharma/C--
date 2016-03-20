@@ -4,10 +4,10 @@
 #include "hashtable.h"
 #include <stdlib.h>
 
-void insert_type(char*);
+void insert_type(entry_t **h_table, char*);
 
-int is_type_exists(char*);
+int is_type_exists(entry_t **h_table, char*);
 
-void init();
+void init(entry_t **h_table);
 
 #endif

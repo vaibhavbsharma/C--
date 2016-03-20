@@ -7,6 +7,9 @@
 #include <string.h>
 #include "table.h"
 static int linenumber = 1;
+/** a hash table */
+entry_t **symbol_table;
+entry_t **type_table;
 %}
 
 %token ID
@@ -231,7 +234,7 @@ typedef_decl: TYPEDEF type ID
 if (DEBUG) {
     printf("inserting %s\n", $3); 
 }
-insert_type($3); 
+ insert_type(type_table,$3); 
 }
 ;
 
@@ -242,7 +245,7 @@ main (argc, argv)
 int argc;
 char *argv[];
   {
-        init();
+        init(type_table);
      	yyin = fopen(argv[1],"r");
      	yyparse();
      	printf("%s\n", "Parsing completed. No errors found.");

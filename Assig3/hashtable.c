@@ -71,7 +71,7 @@ bool ll_insert(entry_t *first, entry_t *node) {
  * @param data pointer to a data object (of any type)
  * @return true if insertion succeed, false if fail
  */
-bool h_insert_entry(entry_t *ent) {
+bool h_insert_entry(entry_t **h_table, entry_t *ent) {
 #if DEBUG
     printf("h_insert_entry('%s')\n", ent->key);
 #endif
@@ -90,7 +90,7 @@ bool h_insert_entry(entry_t *ent) {
  * @param key   the key to search for
  * @return the pointer of an entry, or NULL if not found
  */
-entry_t *h_get_entry(char *key) {
+entry_t *h_get_entry(entry_t **h_table, char *key) {
     if (h_table[hash(key)]->index == -1) {
         return NULL;
     } else {
@@ -103,7 +103,7 @@ entry_t *h_get_entry(char *key) {
     }
 }
 
-void h_init() {
+void h_init(entry_t **h_table) {
 #if DEBUG
     printf("h_init()\n");
 #endif
@@ -116,7 +116,7 @@ void h_init() {
     ht_size = 0;
 }
 
-bool h_insert(char *key, void *data) {
+bool h_insert(entry_t **h_table, char *key, void *data) {
 #if DEBUG
     printf("h_insert('%s')\n", key);
 #endif
@@ -126,11 +126,11 @@ bool h_insert(char *key, void *data) {
     strcpy(entry->key, key);
     entry->data = data;
     entry->next = NULL;
-    return h_insert_entry(entry);
+    return h_insert_entry(h_table, entry);
 }
 
-void *h_get(char *key) {
-    entry_t *found = h_get_entry(key);
+void *h_get(entry_t **h_table, char *key) {
+  entry_t *found = h_get_entry(h_table, key);
     if (found != NULL) {
         return found->data;
     } else {
@@ -138,7 +138,7 @@ void *h_get(char *key) {
     }
 }
 
-void **ht_to_list(int *size) {
+void **ht_to_list(entry_t **h_table, int *size) {
     int ind = 0;
     int i;
     void **list = malloc(ht_size * sizeof(void*));
@@ -164,8 +164,8 @@ void **ht_to_list(int *size) {
     return list;
 }
 
-bool h_remove(char *key) {
-    entry_t *found = h_get_entry(key);
+bool h_remove(entry_t **h_table, char *key) {
+  entry_t *found = h_get_entry(h_table, key);
     if (found == NULL) {
         return false;
     }

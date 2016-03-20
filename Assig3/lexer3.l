@@ -79,7 +79,7 @@ error    .
 
 {ID}            { 
     yylval = yytext;
-    if (is_type_exists(yytext)) {
+    if (is_type_exists(type_table, yytext)) {
         if (DEBUG) {
             printf("%s is a user defined type\n", yytext);
         }

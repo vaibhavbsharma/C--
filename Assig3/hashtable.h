@@ -26,14 +26,12 @@ typedef struct entry_t {
     struct entry_t *next;      /**< a pointer to the next entry */
 } entry_t;
 
-/** a hash table */
-entry_t **h_table;
 
 int ht_size;
 
 /** Initialize the hash table
 */
-void h_init();
+void h_init(entry_t **h_table);
 
 /** Insert a <i> key - data </i> pair to the hash table
  *
@@ -43,7 +41,7 @@ void h_init();
  *
  * @see h_insert_entry ll_insert
  * */
-bool h_insert(char *key, void *data);
+bool h_insert(entry_t **h_table, char *key, void *data);
 
 /** Retrieve a data object that corresponds to a given key from the hash table
  *
@@ -51,7 +49,7 @@ bool h_insert(char *key, void *data);
  * @return the data object of an entry with <tt>key</tt> if found, 
  *         or <tt>NULL</tt> otherwise.
  * */
-void *h_get(char *key);
+void *h_get(entry_t **h_table, char *key);
 
 /** Retrieve all the entries in the hash table as a list
  *
@@ -59,13 +57,13 @@ void *h_get(char *key);
  *          is to be stored
  * @return  list of pointers to data object
  */
-void **ht_to_list(int *size);
+void **ht_to_list(entry_t **h_table, int *size);
 
 /** Remove an entry from the table
  * @param key  the key to remove 
  * @return true if successful, false if no element with <tt>key</tt> exists
  * */
-bool h_remove(char *key);
+bool h_remove(entry_t **h_table, char *key);
 
 
 /* ----- other internal (private) functions ----- */
@@ -76,9 +74,9 @@ entry_t *ll_search(entry_t *first, char *key);
 
 bool ll_insert(entry_t *first, entry_t *node);
 
-bool h_insert_entry(entry_t *ent);
+bool h_insert_entry(entry_t **h_table, entry_t *ent);
 
-entry_t *h_get_entry(char *key);
+entry_t *h_get_entry(entry_t **h_table, char *key);
 
 
 #endif
