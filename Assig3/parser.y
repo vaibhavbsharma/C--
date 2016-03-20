@@ -16,12 +16,14 @@ static int linenumber = 1;
   struct symtab_entry *s;
   int const_int;
   double const_float;
-  enum {int_ty, float_ty, void_ty, typedef_ty, struct_ty, union_ty, arr_int_ty, arr_float_ty} type_info;
+  char* str;
+  type_enum type_info;
 }
 
 %type <type_info> param_type type
+%type <s> var_decl id_list
 
-%token <s> ID
+%token <str> ID
 %token TYPEDEF_NAME
 %token <const_int> ICONST
 %token <const_float> FCONST
@@ -103,11 +105,11 @@ function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE {cur_scope++;} 
 ;
 
 block: decl_list stmt_list  {if(DEBUG) printf("bloc: decl_list stmt_list \n");}
-       |
+|
 ;
 
 stmt_list: stmt_list stmt  {if(DEBUG) printf("stmt_list: stmt_list stmt\n");}
-           |
+|
 ;
 
 param_list: 
@@ -214,18 +216,31 @@ decl : type_decl MK_SEMICOLON
        | var_decl
 ;
 
-var_decl : type id_list MK_SEMICOLON
+var_decl : type id_list MK_SEMICOLON {
+  //Add id in $2 to symbol table with type and scope info
+  ((symtab_entry *) $2)->type = (type_enum) $1;
+  if (!insert_symbol((symtab_entry *) $2, cur_scope)) {
+    // error
+    fprintf(stderr, "ERROR: variable %s already exists!\n", $2->name);
+  } else {
+    $$ = $2;
+  }
+}
 ;
 
-id_list: ID id_tail id_list_tail 
+id_list: ID id_tail id_list_tail {
+       $$.s = create_symbol($1.str, cur_scope);
+}
 ;
 
 id_list_tail: MK_COMMA id_list
 |
 ;
 
-id_tail: MK_LB ICONST MK_RB id_tail
-| OP_ASSIGN ICONST
+id_tail: MK_LB ICONST MK_RB id_tail {
+  // TODO: set type info to array
+}
+| OP_ASSIGN ICONST 
 | OP_ASSIGN FCONST
 |
 ;

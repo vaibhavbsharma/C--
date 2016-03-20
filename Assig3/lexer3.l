@@ -62,16 +62,16 @@ error    .
 
 {ws}            ;   /* do nothing with whitespace */
 {comment}	;
-{kwInt}         {yylval.type_info = int_ty; return INT;}
-{kwFloat}       {yylval.type_info = float_ty; return FLOAT;}
-{kwVoid}	{yylval.type_info = void_ty; return VOID;}
+{kwInt}         {yylval.type_info = INT_TY; return INT;}
+{kwFloat}       {yylval.type_info = FLOAT_TY; return FLOAT;}
+{kwVoid}	{yylval.type_info = VOID_TY; return VOID;}
 {kwIf}          return IF;
 {kwElse}        return ELSE;
 {kwWhile}       return WHILE;
 {kwFor}      	return FOR;
-{kwStruct}	{yylval.type_info = struct_ty; return STRUCT;}
-{kwUnion}	{yylval.type_info = union_ty; return STRUCT;}
-{kwTypedef}     {yylval.type_info = typedef_ty; return TYPEDEF;}
+{kwStruct}	{yylval.type_info = STRUCT_TY; return STRUCT;}
+{kwUnion}	{yylval.type_info = UNION_TY; return STRUCT;}
+{kwTypedef}     {yylval.type_info = TYPEDEF_TY; return TYPEDEF;}
 {kwReturn}      return RETURN;
 
 {libRead}       return READ;
@@ -79,6 +79,7 @@ error    .
 {libWrite}      return WRITE;
 
 {ID}            { 
+  strcpy(yylval.str,yytext);
     if (is_type_exists(yytext)) {
         if (DEBUG) {
             printf("%s is a user defined type\n", yytext);
