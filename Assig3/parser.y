@@ -23,13 +23,15 @@ entry_t **type_table;
 %type <const_int> ICONST
 %type <const_float> FCONST
 %type <type_info> param_type type
+
+
 %token ID
 %token TYPEDEF_NAME
 %token ICONST
 %token FCONST
 %token SCONST
 %token VOID    
-%token INT     
+%token INT
 %token FLOAT   
 %token IF      
 %token ELSE    

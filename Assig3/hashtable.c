@@ -103,17 +103,18 @@ entry_t *h_get_entry(entry_t **h_table, char *key) {
     }
 }
 
-void h_init(entry_t **h_table) {
+entry_t **h_init() {
 #if DEBUG
     printf("h_init()\n");
 #endif
-    h_table = malloc(sizeof(entry_t) * HT_SIZ);
+    entry_t **h_table = malloc(sizeof(entry_t) * HT_SIZ);
     int i;
     for (i=0; i<HT_SIZ; i++) {
         h_table[i] = malloc(sizeof(entry_t));
         h_table[i]->index = -1;
     }
     ht_size = 0;
+    return h_table;
 }
 
 bool h_insert(entry_t **h_table, char *key, void *data) {
