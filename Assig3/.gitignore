@@ -42,5 +42,6 @@ lex.yy.c
 scanner
 
 parser
-parser.output
-parser.tab.c
+*.output
+*.tab.c
+*.tab.h

@@ -10,8 +10,14 @@ static int linenumber = 1;
 /** a hash table */
 entry_t **symbol_table;
 entry_t **type_table;
+ int cur_scope=0;
 %}
 
+%union {
+  char *id_name;
+  int const_int;
+}
+%type <id_name> ID
 %token ID
 %token TYPEDEF_NAME
 %token CONST
@@ -78,6 +84,7 @@ function_decl	:
 		;
  */
 
+
 program : global_decl_list;
 
 global_decl_list: global_decl_list global_decl
@@ -88,7 +95,7 @@ global_decl : decl_list function_decl |
               function_decl
 ;
 
-function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE block MK_RBRACE {if(DEBUG) printf("function_decl\n");}
+function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;if(DEBUG) printf("function_decl\n");}
 ;
 
 block: decl_list stmt_list  {if(DEBUG) printf("bloc: decl_list stmt_list \n");}
@@ -120,7 +127,7 @@ param_type: INT | FLOAT | VOID | STRUCT ID
 ;
 
 stmt: 
-MK_LBRACE block MK_RBRACE {if(DEBUG) printf("stmt: {block}\n");}
+MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;if(DEBUG) printf("stmt: {block}\n");}
 | IF MK_LPAREN expr MK_RPAREN stmt else_tail {if(DEBUG) printf("stmt: if(expr) stmt\n");}
 | WHILE MK_LPAREN expr MK_RPAREN stmt {if(DEBUG) printf("stmt: while(expr) stmt\n");}
 | FOR MK_LPAREN assign_expr MK_SEMICOLON expr MK_SEMICOLON assign_expr MK_RPAREN stmt {if(DEBUG) printf("stmt: for(assign_expr expr expr) stmt\n");} 

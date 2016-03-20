@@ -41,7 +41,8 @@ op_plus "+"
 op_minus "-"
 op_times "*"
 op_divide "/"
-constant {digit}+(("."){digit}+)?
+i-constant {digit}+
+f-constant {digit}+(("."){digit}+)?
 comment	"/*"(([^*])|([*]+[^/*]))*("*")+"/"
 s-const \"([^"\n])*\"
 ws       [ \t]+
@@ -78,7 +79,8 @@ error    .
 {libWrite}      return WRITE;
 
 {ID}            { 
-    yylval = yytext;
+    /*yylval = yytext;*/
+    strcpy(yylval.id_name, yytext);
     if (is_type_exists(type_table, yytext)) {
         if (DEBUG) {
             printf("%s is a user defined type\n", yytext);
@@ -102,10 +104,15 @@ error    .
 {op_minus}      return OP_MINUS;
 {op_times}      return OP_TIMES;
 {op_divide}     return OP_DIVIDE;
-{constant}      {  
-    yylval = yytext; 
+{i-constant}      {  
+    yylval.const_int = atoi(yytext); 
     return CONST;
     }
+{f-constant}      {  
+    yylval.const_int = atof(yytext); 
+    return CONST;
+    }
+
 {s-const}       { return SCONST;}
 {mk_lparen}     return MK_LPAREN;
 {mk_rparen}     { return MK_RPAREN; }
