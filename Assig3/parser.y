@@ -17,10 +17,12 @@ entry_t **type_table;
   char *id_name;
   int const_int;
   double const_float;
+  enum {int_ty, float_ty, void_ty, typedef_ty, struct_ty, union_ty, arr_int_ty, arr_float_ty} type_info;
 }
 %type <id_name> ID
 %type <const_int> ICONST
 %type <const_float> FCONST
+%type <type_info> param_type type
 %token ID
 %token TYPEDEF_NAME
 %token ICONST
