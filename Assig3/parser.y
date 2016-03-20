@@ -5,32 +5,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "table.h"
+#include "typetable.h"
+#include "symboltable.h"
 static int linenumber = 1;
 /** a hash table */
-entry_t **symbol_table;
-entry_t **type_table;
  int cur_scope=0;
 %}
 
 %union {
-  char *id_name;
+  struct symtab_entry *s;
   int const_int;
   double const_float;
   enum {int_ty, float_ty, void_ty, typedef_ty, struct_ty, union_ty, arr_int_ty, arr_float_ty} type_info;
 }
-%type <id_name> ID
-%type <const_int> ICONST
-%type <const_float> FCONST
+
 %type <type_info> param_type type
 
-
-%token ID
+%token <s> ID
 %token TYPEDEF_NAME
-%token ICONST
-%token FCONST
+%token <const_int> ICONST
+%token <const_float> FCONST
 %token SCONST
-%token VOID    
+%token VOID
 %token INT
 %token FLOAT   
 %token IF      
@@ -253,7 +249,7 @@ typedef_decl: TYPEDEF type ID
 if (DEBUG) {
     printf("inserting %s\n", $3); 
 }
- insert_type(type_table,$3); 
+ insert_type($3); 
 }
 ;
 
@@ -264,7 +260,7 @@ main (argc, argv)
 int argc;
 char *argv[];
   {
-        init(type_table);
+    init_typetab();
      	yyin = fopen(argv[1],"r");
      	yyparse();
      	printf("%s\n", "Parsing completed. No errors found.");

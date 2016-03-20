@@ -13,9 +13,9 @@ typedef struct {
     FUNCTION, ARRAY
   } kind;
   enum {
-    int_ty, float_ty, void_ty, typedef_ty, struct_ty, union_ty, arr_int_ty, 
-    arr_float_ty
-  } type_info;
+    INT_TY, FLOAT_TY, VOID_TY, TYPEDEF_TY, STRUCT_TY, UNION_TY, 
+    ARR_INT_TY, ARR_FLOAT_TY
+  } type;
   int n_arg;
 } symtab_entry;
 

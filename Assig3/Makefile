@@ -1,25 +1,28 @@
 TARGET = parser
-OBJECT = parser.tab.c parser.tab.o lex.yy.c hashtable.o table.o
+OBJECT = parser.tab.c parser.tab.o lex.yy.c hashtable.o typetable.o symboltable.o
 CC = gcc
 LEX = flex
 YACC = bison -v
 YACCFLAG = 
 LIBS = -lfl 
 
-parser: parser.tab.o table.o
-	$(CC) -o $(TARGET) parser.tab.o table.o hashtable.o $(LIBS)
+parser: parser.tab.o typetable.o symboltable.o
+	$(CC) -o $(TARGET) parser.tab.o typetable.o hashtable.o symboltable.o $(LIBS)
 
-parser-mac: parser.tab.o table.o
-	$(CC) -o $(TARGET) parser.tab.o table.o hashtable.o -ll
+parser-mac: parser.tab.o typetable.o
+	$(CC) -o $(TARGET) parser.tab.o typetable.o hashtable.o -ll
 
 parser.tab.o: parser.tab.c lex.yy.c
 	$(CC) -c parser.tab.c
 
-table.o: table.c hashtable.o
-	$(CC) -c table.c hashtable.c
+typetable.o: typetable.c hashtable.o
+	$(CC) -c typetable.c hashtable.c
 
 hashtable.o: hashtable.c
 	$(CC) -c -o hashtable.o hashtable.c
+
+symboltable.o: symboltable.c
+	$(CC) -c -o symboltable.o symboltable.c
 
 lex.yy.c: lexer3.l
 	$(LEX) lexer3.l

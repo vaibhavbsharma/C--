@@ -2,10 +2,10 @@
 
 %{
 #ifndef DEBUG
-#define DEBUG false
+#define DEBUG true
 #endif
 #include <stdio.h>
-#include "table.h"
+#include "typetable.h"
 #include "common.h"
 %}
 letter   [A-Za-z]
@@ -79,9 +79,7 @@ error    .
 {libWrite}      return WRITE;
 
 {ID}            { 
-    /*yylval = yytext;*/
-    strcpy(yylval.id_name, yytext);
-    if (is_type_exists(type_table, yytext)) {
+    if (is_type_exists(yytext)) {
         if (DEBUG) {
             printf("%s is a user defined type\n", yytext);
         }
