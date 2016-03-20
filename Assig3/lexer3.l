@@ -106,11 +106,11 @@ error    .
 {op_divide}     return OP_DIVIDE;
 {i-constant}      {  
     yylval.const_int = atoi(yytext); 
-    return CONST;
+    return ICONST;
     }
 {f-constant}      {  
-    yylval.const_int = atof(yytext); 
-    return CONST;
+    yylval.const_float = atof(yytext); 
+    return FCONST;
     }
 
 {s-const}       { return SCONST;}

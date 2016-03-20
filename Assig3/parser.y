@@ -16,11 +16,15 @@ entry_t **type_table;
 %union {
   char *id_name;
   int const_int;
+  double const_float;
 }
 %type <id_name> ID
+%type <const_int> ICONST
+%type <const_float> FCONST
 %token ID
 %token TYPEDEF_NAME
-%token CONST
+%token ICONST
+%token FCONST
 %token SCONST
 %token VOID    
 %token INT     
@@ -118,7 +122,7 @@ param_var_decl : param_type param_id_list
 param_id_list: ID param_id_tail  
 ;
 
-param_id_tail: MK_LB CONST MK_RB param_id_tail
+param_id_tail: MK_LB ICONST MK_RB param_id_tail
 | MK_LB MK_RB param_id_tail
 |
 ;
@@ -159,12 +163,14 @@ function_call: ID MK_LPAREN call_param_list MK_RPAREN
 ;
 
 call_param_list: lhs call_param_list_tail
-| CONST call_param_list_tail
+| ICONST call_param_list_tail
+| FCONST call_param_list_tail
 |
 ;
 
 call_param_list_tail: MK_COMMA lhs call_param_list_tail
-| MK_COMMA CONST call_param_list_tail
+| MK_COMMA ICONST call_param_list_tail
+| MK_COMMA FCONST call_param_list_tail
 |
 ;
 
@@ -172,7 +178,7 @@ lhs: ID expr_id_tail expr_member
 ;
 
 
-expr_id_tail: MK_LB CONST MK_RB expr_id_tail
+expr_id_tail: MK_LB ICONST MK_RB expr_id_tail
 | MK_LB ID MK_RB expr_id_tail
 |
 ;
@@ -188,7 +194,8 @@ expr: lhs {if(DEBUG) printf("expr: lhs\n");}
 | unop expr {if(DEBUG) printf("expr: unop expr\n");}
 /*| expr binop CONST  {printf("expr: expr binop CONST\n");}*/
 /*| ID  {printf("expr: ID\n");}*/
-| CONST {if(DEBUG) printf("expr: CONST\n");}
+| ICONST {if(DEBUG) printf("expr: ICONST\n");}
+| FCONST {if(DEBUG) printf("expr: FCONST\n");}
 ;
 
 binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE | 
@@ -217,8 +224,9 @@ id_list_tail: MK_COMMA id_list
 |
 ;
 
-id_tail: MK_LB CONST MK_RB id_tail
-| OP_ASSIGN CONST
+id_tail: MK_LB ICONST MK_RB id_tail
+| OP_ASSIGN ICONST
+| OP_ASSIGN FCONST
 |
 ;
 
