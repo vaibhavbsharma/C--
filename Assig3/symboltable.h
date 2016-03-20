@@ -4,6 +4,7 @@
 #include "hashtable.h"
 #include <stdbool.h>
 #include <assert.h>
+#include "common.h"
 
 #define ID_SIZ 257
 

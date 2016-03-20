@@ -75,29 +75,15 @@ static int linenumber = 1;
 /* ==== Grammar Section ==== */
 
 /* Productions */               /* Semantic actions */
- /*program		: global_decl_list
-		;
-
-global_decl_list: global_decl_list global_decl
-                |
-		;
-
-global_decl	: function_decl
-		| function_decl
-		;
-
-function_decl	: 
-		;
- */
-
 
 program : global_decl_list;
 
-global_decl_list: global_decl_list global_decl
+global_decl_list: global_decl_list global_decl {printf("parser:global_decl_list: global_decl_list global_decglobal_decl_list global_decl\n");}
                   | 
 ;
 
-global_decl : decl_list function_decl |
+global_decl : decl_list function_decl  {printf("parser:global_decl: decl_list function_decl\n");}
+            |
               function_decl
 ;
 
@@ -207,29 +193,37 @@ binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE |
 unop: OP_NOT | OP_MINUS
 ;
 
-decl_list : decl_list decl
-| decl
+decl_list : decl_list decl  { printf("this rule was hit\n");}
+| decl 
 |
 ;
 
-decl : type_decl MK_SEMICOLON 
-       | var_decl
+decl : type_decl MK_SEMICOLON | var_decl  
 ;
 
 var_decl : type id_list MK_SEMICOLON {
   //Add id in $2 to symbol table with type and scope info
-  ((symtab_entry *) $2)->type = (type_enum) $1;
-  if (!insert_symbol((symtab_entry *) $2, cur_scope)) {
+  //$2->type = $1;
+  if (!insert_symbol($2, cur_scope)) {
     // error
-    fprintf(stderr, "ERROR: variable %s already exists!\n", $2->name);
+    //fprintf(stderr, "ERROR: variable %s already exists!\n", $2->name);
   } else {
+#if DEBUG
+    //printf("does it show up properly? %s\n", lookup_symtab($2->name, cur_scope)->name);
+#endif
     $$ = $2;
   }
 }
 ;
 
 id_list: ID id_tail id_list_tail {
-       $$.s = create_symbol($1.str, cur_scope);
+  if (DEBUG) {
+    printf("parser:id_list $1 %s\n", $1);
+  }
+    $$ = create_symbol($1, cur_scope);
+    if (DEBUG) {
+	//printf("parser:id_list $$->name %s\n", $$->name);
+    }
 }
 ;
 
@@ -276,6 +270,7 @@ int argc;
 char *argv[];
   {
     init_typetab();
+    init_symtab();
      	yyin = fopen(argv[1],"r");
      	yyparse();
      	printf("%s\n", "Parsing completed. No errors found.");

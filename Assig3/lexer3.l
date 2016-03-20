@@ -1,9 +1,6 @@
 /*lexer file*/
 
 %{
-#ifndef DEBUG
-#define DEBUG true
-#endif
 #include <stdio.h>
 #include "typetable.h"
 #include "common.h"
@@ -79,7 +76,8 @@ error    .
 {libWrite}      return WRITE;
 
 {ID}            { 
-  strcpy(yylval.str,yytext);
+    yylval.str = yytext;
+    printf("lexer:ID yylval.str %s\n", yylval.str);
     if (is_type_exists(yytext)) {
         if (DEBUG) {
             printf("%s is a user defined type\n", yytext);
