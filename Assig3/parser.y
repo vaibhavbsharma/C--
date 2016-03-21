@@ -13,29 +13,29 @@ static int linenumber = 1;
 %}
 
 %union {
-  struct symtab_entry *s;
+  symtab_entry *s;
   int const_int;
   double const_float;
   char* str;
   type_enum type_info;
 }
 
-%type <type_info> param_type type
+%type <type_info> param_type type 
 %type <s> var_decl id_list
 
 %token <str> ID
-%token TYPEDEF_NAME
 %token <const_int> ICONST
 %token <const_float> FCONST
 %token SCONST
-%token VOID
-%token INT
-%token FLOAT   
-%token IF      
-%token ELSE    
+%token <type_info> TYPEDEF_NAME
+%token <type_info> VOID
+%token <type_info> INT
+%token <type_info> FLOAT   
+%token <type_info> STRUCT  
+%token IF
+%token ELSE
 %token WHILE   
 %token FOR
-%token STRUCT  
 %token TYPEDEF
 
 %token READ
@@ -90,7 +90,7 @@ global_decl : decl_list function_decl  {printf("parser:global_decl: decl_list fu
 function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;if(DEBUG) printf("function_decl\n");}
 ;
 
-block: decl_list stmt_list  {if(DEBUG) printf("bloc: decl_list stmt_list \n");}
+block: decl_list stmt_list  {if(DEBUG) printf("parser::block decl_list stmt_list \n");}
 |
 ;
 
@@ -208,21 +208,16 @@ var_decl : type id_list MK_SEMICOLON {
     // error
     //fprintf(stderr, "ERROR: variable %s already exists!\n", $2->name);
   } else {
-#if DEBUG
-    //printf("does it show up properly? %s\n", lookup_symtab($2->name, cur_scope)->name);
-#endif
     $$ = $2;
   }
 }
 ;
 
 id_list: ID id_tail id_list_tail {
-  if (DEBUG) {
-    printf("parser:id_list $1 %s\n", $1);
-  }
+    if (DEBUG) printf("parser::id_list $1 %s\n", $1);
     $$ = create_symbol($1, cur_scope);
     if (DEBUG) {
-	//printf("parser:id_list $$->name %s\n", $$->name);
+        //printf("parser:id_list $$->name %s\n", $$->name);
     }
 }
 ;

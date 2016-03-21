@@ -9,8 +9,8 @@ LIBS = -lfl
 parser: parser.tab.o typetable.o symboltable.o
 	$(CC) -o $(TARGET) parser.tab.o typetable.o hashtable.o symboltable.o $(LIBS)
 
-parser-mac: parser.tab.o typetable.o
-	$(CC) -o $(TARGET) parser.tab.o typetable.o hashtable.o -ll
+mac: parser.tab.o typetable.o symboltable.o
+	$(CC) -o $(TARGET) parser.tab.o typetable.o hashtable.o symboltable.o -ll
 
 parser.tab.o: parser.tab.c lex.yy.c
 	$(CC) -c parser.tab.c

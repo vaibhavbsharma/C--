@@ -38,10 +38,10 @@ op_plus "+"
 op_minus "-"
 op_times "*"
 op_divide "/"
-i-constant {digit}+
-f-constant {digit}+(("."){digit}+)?
+i_constant {digit}+
+f_constant {digit}+(("."){digit}+)?
 comment	"/*"(([^*])|([*]+[^/*]))*("*")+"/"
-s-const \"([^"\n])*\"
+s_const \"([^"\n])*\"
 ws       [ \t]+
 newline  "\n"
 mk_lparen "("
@@ -59,16 +59,22 @@ error    .
 
 {ws}            ;   /* do nothing with whitespace */
 {comment}	;
-{kwInt}         {yylval.type_info = INT_TY; return INT;}
-{kwFloat}       {yylval.type_info = FLOAT_TY; return FLOAT;}
-{kwVoid}	{yylval.type_info = VOID_TY; return VOID;}
+{kwInt}         {//yylval.type_info = INT_TY; 
+return INT;}
+{kwFloat}       {//yylval.type_info = FLOAT_TY; 
+return FLOAT;}
+{kwVoid}	{//yylval.type_info = VOID_TY; 
+return VOID;}
 {kwIf}          return IF;
 {kwElse}        return ELSE;
 {kwWhile}       return WHILE;
 {kwFor}      	return FOR;
-{kwStruct}	{yylval.type_info = STRUCT_TY; return STRUCT;}
-{kwUnion}	{yylval.type_info = UNION_TY; return STRUCT;}
-{kwTypedef}     {yylval.type_info = TYPEDEF_TY; return TYPEDEF;}
+{kwStruct}	{//yylval.type_info = STRUCT_TY; 
+return STRUCT;}
+{kwUnion}	{//yylval.type_info = UNION_TY; 
+return STRUCT;}
+{kwTypedef}     {//yylval.type_info = TYPEDEF_TY; 
+return TYPEDEF;}
 {kwReturn}      return RETURN;
 
 {libRead}       return READ;
@@ -77,11 +83,9 @@ error    .
 
 {ID}            { 
     yylval.str = yytext;
-    printf("lexer:ID yylval.str %s\n", yylval.str);
+    if(DEBUG) printf("lexer::ID yylval.str: %s\n", yylval.str);
     if (is_type_exists(yytext)) {
-        if (DEBUG) {
-            printf("%s is a user defined type\n", yytext);
-        }
+        if (DEBUG) printf("lexer::ID %s is a user defined type\n", yytext);
         return TYPEDEF_NAME;
     } else {
         return ID; 
@@ -101,16 +105,16 @@ error    .
 {op_minus}      return OP_MINUS;
 {op_times}      return OP_TIMES;
 {op_divide}     return OP_DIVIDE;
-{i-constant}      {  
+{i_constant}      {  
     yylval.const_int = atoi(yytext); 
     return ICONST;
     }
-{f-constant}      {  
+{f_constant}      {  
     yylval.const_float = atof(yytext); 
     return FCONST;
     }
 
-{s-const}       { return SCONST;}
+{s_const}       { return SCONST;}
 {mk_lparen}     return MK_LPAREN;
 {mk_rparen}     { return MK_RPAREN; }
 {mk_lbrace}     { return MK_LBRACE; }
