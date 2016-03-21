@@ -22,6 +22,7 @@ typedef struct {
   } kind;
   type_enum type;
   int n_arg;
+  struct symtab_entry* next;
 } symtab_entry;
 
 /** A global symbol table */

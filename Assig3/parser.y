@@ -206,9 +206,9 @@ var_decl    : type id_list
             {
                 debug("parser::var_decl");
                 //Add id in $2 to symbol table with type and scope info
-                //$2->type = $1;
+                $2->type = $1;
                 if (!insert_symbol($2, cur_scope)) {
-                    yyerror("variable %s is already declared in the same scope", $2);
+                    yyerror("variable %s is already declared", $2);
                 } else {
                     $$ = $2;
                 }
@@ -217,11 +217,15 @@ var_decl    : type id_list
 
 id_list : ID id_tail
         {
-            debug("parser::id_list");
-            debug("\tID->name: %s", $1->name);
+            debug("parser::id_list ID->name: %s", $1->name);
             $$ = $1;
         }
         | id_list MK_COMMA ID id_tail 
+        {
+//TODO (TJ)
+            /*$$->s 
+            append($3); */
+        }
         |
         ;
 

@@ -149,7 +149,7 @@ void **ht_to_list(entry_t **h_table, int *size) {
     }
     *size = ind;
     for (i=0; i<ind; i++) {
-        debug("id: %s\n", (char *) list[i]);
+        debug("id: %s", (char *) list[i]);
     }
     return list;
 }
