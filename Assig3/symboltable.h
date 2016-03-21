@@ -38,7 +38,7 @@ void init_symtab();
 * */
 bool insert_symbol(symtab_entry *s, int scope);
 
-/** Lookup ID in symbol table 
+/** Lookup ID in the symbol table, only in the current scope
 * @param id_name  identifier name
 * @param scope    the current scope to look for
 * @return         symbol table entry if the symbol with ID exists, and 
@@ -46,6 +46,13 @@ bool insert_symbol(symtab_entry *s, int scope);
 * */
 symtab_entry *lookup_symtab(char *id_name, int scope);
 
+/** Lookup ID in the symbol table, including all the previous scopes
+* @param id_name  identifier name
+* @param scope    the current scope to start with
+* @return         symbol table entry if the symbol with ID exists, and 
+*                 NULL otherwise 
+* */
+symtab_entry *lookup_symtab_prevscope(char *id_name, int scope);
 
 /** Lookup ID in symbol table 
 * @param id_name  identifier name

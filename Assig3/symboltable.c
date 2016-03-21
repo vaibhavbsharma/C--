@@ -16,6 +16,16 @@ symtab_entry *lookup_symtab(char *id_name, int scope) {
     return ((symtab_entry *) h_get(symtab, key));
 }
 
+symtab_entry *lookup_symtab_prevscope(char *id_name, int scope) {
+    symtab_entry *s = NULL;
+    while (!s && scope >= 0) {
+        // starting from the current scope, lookup all the previous scopes
+        char* key = strcat(myitoa(scope--), id_name);
+        s = ((symtab_entry *) h_get(symtab, key));
+    }
+    return s;
+}
+
 symtab_entry *create_symbol(char *id_name, int scope) {
     assert(strlen(id_name) < 257);
     symtab_entry *s = malloc(sizeof(symtab_entry));
