@@ -63,20 +63,30 @@ error    .
     yylval.type_info = INT_TY; 
     return INT;
     }
-{kwFloat}       {//yylval.type_info = FLOAT_TY; 
-return FLOAT;}
-{kwVoid}	{//yylval.type_info = VOID_TY; 
-return VOID;}
+{kwFloat}       {
+    yylval.type_info = FLOAT_TY; 
+    return FLOAT;
+    }
+{kwVoid}	{
+    yylval.type_info = VOID_TY; 
+    return VOID;
+    }
 {kwIf}          return IF;
 {kwElse}        return ELSE;
 {kwWhile}       return WHILE;
 {kwFor}      	return FOR;
-{kwStruct}	{//yylval.type_info = STRUCT_TY; 
-return STRUCT;}
-{kwUnion}	{//yylval.type_info = UNION_TY; 
-return STRUCT;}
-{kwTypedef}     {//yylval.type_info = TYPEDEF_TY; 
-return TYPEDEF;}
+{kwStruct}	{
+    yylval.type_info = STRUCT_TY; 
+    return STRUCT;
+    }
+{kwUnion}	{
+    yylval.type_info = UNION_TY; 
+    return STRUCT;
+    }
+{kwTypedef}     {
+    yylval.type_info = TYPEDEF_TY; 
+    return TYPEDEF;
+    }
 {kwReturn}      return RETURN;
 
 {libRead}       return READ;

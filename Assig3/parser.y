@@ -204,27 +204,34 @@ decl    : type_decl MK_SEMICOLON
 
 var_decl    : type id_list 
             {
-                debug("parser::var_decl");
                 //Add id in $2 to symbol table with type and scope info
+                symtab_entry *handle = $2;
+                do {
+                    handle->type = $<type_info>1;
+                    if (!insert_symbol(handle, cur_scope)) {
+                        yyerror("variable %s is already declared", $2);
+                    } else {
+                        symtab_entry *s = lookup_symtab(handle->name, cur_scope);
+                        debug("parser::var_decl symbol inserted successfully. name: %s, scope: %d, type: %d", s->name, s->scope, s->type);
+                    }
+                } while((handle = handle->next));
                 $2->type = $1;
-                if (!insert_symbol($2, cur_scope)) {
-                    yyerror("variable %s is already declared", $2);
-                } else {
-                    $$ = $2;
-                }
             }
 ;
 
 id_list : ID id_tail
         {
-            debug("parser::id_list ID->name: %s", $1->name);
             $$ = $1;
         }
         | id_list MK_COMMA ID id_tail 
         {
-//TODO (TJ)
-            /*$$->s 
-            append($3); */
+            // append at the end of the list ($1)
+            symtab_entry *handle = $<s>1;
+            while (handle->next) {
+                handle = handle->next;
+            } 
+            handle->next = $3;
+            $$ = $1;
         }
         |
         ;
