@@ -59,8 +59,10 @@ error    .
 
 {ws}            ;   /* do nothing with whitespace */
 {comment}	;
-{kwInt}         {//yylval.type_info = INT_TY; 
-return INT;}
+{kwInt}         {
+    yylval.type_info = INT_TY; 
+    return INT;
+    }
 {kwFloat}       {//yylval.type_info = FLOAT_TY; 
 return FLOAT;}
 {kwVoid}	{//yylval.type_info = VOID_TY; 

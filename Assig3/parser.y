@@ -76,15 +76,20 @@ static int linenumber = 1;
 
 /* Productions */               /* Semantic actions */
 
-program : global_decl_list;
+program : global_decl_list {
+    if (DEBUG) printf("parser::program\n");
+};
 
-global_decl_list: global_decl_list global_decl {printf("parser:global_decl_list: global_decl_list global_decglobal_decl_list global_decl\n");}
-                  | 
+global_decl_list: global_decl_list global_decl {
+    if (DEBUG) printf("parser::global_decl_list\n");
+}
+| 
 ;
 
-global_decl : decl_list function_decl  {printf("parser:global_decl: decl_list function_decl\n");}
-            |
-              function_decl
+global_decl : decl_list function_decl  {
+    if (DEBUG) printf("parser:global_decl: decl_list function_decl\n");
+}
+| function_decl
 ;
 
 function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;if(DEBUG) printf("function_decl\n");}
@@ -198,64 +203,75 @@ decl_list : decl_list decl  { printf("this rule was hit\n");}
 |
 ;
 
-decl : type_decl MK_SEMICOLON | var_decl  
+decl : type_decl MK_SEMICOLON | var_decl  MK_SEMICOLON
 ;
 
-var_decl : type id_list MK_SEMICOLON {
-  //Add id in $2 to symbol table with type and scope info
-  //$2->type = $1;
-  if (!insert_symbol($2, cur_scope)) {
-    // error
-    //fprintf(stderr, "ERROR: variable %s already exists!\n", $2->name);
-  } else {
-    $$ = $2;
-  }
-}
-;
-
-id_list: ID id_tail id_list_tail {
-    if (DEBUG) printf("parser::id_list $1 %s\n", $1);
-    $$ = create_symbol($1, cur_scope);
+var_decl : type id_list {
     if (DEBUG) {
-        //printf("parser:id_list $$->name %s\n", $$->name);
+        printf("parser::var_decl\n");
+        printf("\t$1: %d, $2: %d\n", $1, $2);
+    }
+    //Add id in $2 to symbol table with type and scope info
+    //$2->type = $1;
+    if (!insert_symbol($2, cur_scope)) {
+        // error
+        //fprintf(stderr, "ERROR: variable %s already exists!\n", $2->name);
+    } else {
+        $$ = $2;
     }
 }
 ;
 
-id_list_tail: MK_COMMA id_list
-|
+id_list : ID id_tail id_list_tail 
+        {
+            if (DEBUG) {
+                printf("parser::id_list\n");
+                printf("\tID: %s\n", $1);
+            }
+            $$ = create_symbol($1, cur_scope);
+            if (DEBUG) {
+                //printf("parser:id_list $$->name %s\n", $$->name);
+            }
+        }
 ;
 
-id_tail: MK_LB ICONST MK_RB id_tail {
-  // TODO: set type info to array
-}
-| OP_ASSIGN ICONST 
-| OP_ASSIGN FCONST
-|
-;
+id_list_tail    : MK_COMMA id_list
+                |
+                ;
 
-type: INT | FLOAT | VOID | TYPEDEF_NAME | STRUCT ID struct_or_null_block | STRUCT struct_block
-;
+id_tail : MK_LB ICONST MK_RB id_tail 
+        | OP_ASSIGN ICONST 
+        | OP_ASSIGN FCONST
+        |
+        ;
 
-struct_or_null_block:
-MK_LBRACE decl_list MK_RBRACE
-|
-;
+type    : INT 
+        | FLOAT 
+        | VOID 
+        | TYPEDEF_NAME 
+        | STRUCT ID struct_or_null_block 
+        | STRUCT struct_block
+        ;
 
-struct_block: MK_LBRACE decl_list MK_RBRACE;
+struct_or_null_block    : MK_LBRACE decl_list MK_RBRACE
+                        |
+                        ;
 
-type_decl: struct_decl | typedef_decl;
+struct_block    : MK_LBRACE decl_list MK_RBRACE
+                ;
 
-struct_decl: STRUCT ID MK_LBRACE decl_list MK_RBRACE;
+type_decl       : struct_decl 
+                | typedef_decl
+                ;
 
-typedef_decl: TYPEDEF type ID 
-            { 
-if (DEBUG) {
-    printf("inserting %s\n", $3); 
-}
- insert_type($3); 
-}
-;
+struct_decl     : STRUCT ID MK_LBRACE decl_list MK_RBRACE;
+
+typedef_decl    : TYPEDEF type ID 
+                { 
+                    if (DEBUG) printf("inserting %s\n", $3); 
+                    insert_type($3); 
+                }
+                ;
 
 %%
 
