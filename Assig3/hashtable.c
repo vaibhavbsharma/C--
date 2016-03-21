@@ -72,7 +72,6 @@ bool ll_insert(entry_t *first, entry_t *node) {
  * @return true if insertion succeed, false if fail
  */
 bool h_insert_entry(entry_t **h_table, entry_t *ent) {
-    if (DEBUG) { printf("hashtable:h_insert_entry('%s')\n", ent->key); }
     if (h_table[ent->index]->index == -1) {
         // empty
         free(h_table[ent->index]);
@@ -102,9 +101,6 @@ entry_t *h_get_entry(entry_t **h_table, char *key) {
 }
 
 entry_t **h_init() {
-if (DEBUG) {
-    printf("hashtable:h_init()\n");
-}
     entry_t **h_table = malloc(sizeof(entry_t) * HT_SIZ);
     int i;
     for (i=0; i<HT_SIZ; i++) {
@@ -116,9 +112,6 @@ if (DEBUG) {
 }
 
 bool h_insert(entry_t **h_table, char *key, void *data) {
-if (DEBUG) {
-    printf("hashtable:h_insert('%s')\n", key);
-}
     entry_t *entry = (entry_t*) malloc(sizeof(entry_t));
     entry->index = hash(key);
     entry->key = (char*) malloc(strlen(key) * sizeof(char));
@@ -155,11 +148,9 @@ void **ht_to_list(entry_t **h_table, int *size) {
         } while(handle);
     }
     *size = ind;
-if (DEBUG) { 
     for (i=0; i<ind; i++) {
-        printf("id: %s\n", (char *) list[i]);
+        debug("id: %s\n", (char *) list[i]);
     }
-}
     return list;
 }
 

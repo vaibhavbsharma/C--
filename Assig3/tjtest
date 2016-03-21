@@ -2,7 +2,8 @@ int a;
 int b = 3;
 
 int main() {
-    int c;
     int a = 4;
+    int c;
+    int a;
 }
 

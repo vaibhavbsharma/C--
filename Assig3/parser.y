@@ -23,7 +23,7 @@ static int linenumber = 1;
 %type <type_info> param_type type 
 %type <s> var_decl id_list
 
-%token <str> ID
+%token <s> ID
 %token <const_int> ICONST
 %token <const_float> FCONST
 %token SCONST
@@ -77,35 +77,35 @@ static int linenumber = 1;
 /* Productions */               /* Semantic actions */
 
 program : global_decl_list {
-    if (DEBUG) printf("parser::program\n");
+    debug("parser::program");
 };
 
 global_decl_list: global_decl_list global_decl {
-    if (DEBUG) printf("parser::global_decl_list\n");
+    debug("parser::global_decl_list");
 }
 | 
 ;
 
 global_decl : decl_list function_decl  {
-    if (DEBUG) printf("parser:global_decl: decl_list function_decl\n");
+    debug("parser:global_decl: decl_list function_decl");
 }
 | function_decl
 ;
 
-function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;if(DEBUG) printf("function_decl\n");}
+function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;debug("function_decl");}
 ;
 
-block: decl_list stmt_list  {if(DEBUG) printf("parser::block decl_list stmt_list \n");}
+block: decl_list stmt_list  {debug("parser::block decl_list stmt_list");}
 |
 ;
 
-stmt_list: stmt_list stmt  {if(DEBUG) printf("stmt_list: stmt_list stmt\n");}
+stmt_list: stmt_list stmt  {debug("stmt_list: stmt_list stmt");}
 |
 ;
 
 param_list: 
-param_var_decl {if(DEBUG) printf("param_list: param_var_decl\n");}
-| param_list MK_COMMA param_var_decl {if(DEBUG) printf("param_list: param_list, param_var_decl\n");}
+param_var_decl {debug("param_list: param_var_decl");}
+| param_list MK_COMMA param_var_decl {debug("param_list: param_list, param_var_decl");}
 |
 ; 
 
@@ -123,34 +123,31 @@ param_id_tail: MK_LB ICONST MK_RB param_id_tail
 param_type: INT | FLOAT | VOID | STRUCT ID
 ;
 
-stmt: 
-MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;if(DEBUG) printf("stmt: {block}\n");}
-| IF MK_LPAREN expr MK_RPAREN stmt else_tail {if(DEBUG) printf("stmt: if(expr) stmt\n");}
-| WHILE MK_LPAREN expr MK_RPAREN stmt {if(DEBUG) printf("stmt: while(expr) stmt\n");}
-| FOR MK_LPAREN assign_expr MK_SEMICOLON expr MK_SEMICOLON assign_expr MK_RPAREN stmt {if(DEBUG) printf("stmt: for(assign_expr expr expr) stmt\n");} 
-| assign_expr MK_SEMICOLON {if(DEBUG) printf("stmt: assign_expr\n");}
-| WRITE MK_LPAREN SCONST MK_RPAREN MK_SEMICOLON {if(DEBUG) printf("stmt: write string constant called at %d\n", linenumber);}
-| WRITE MK_LPAREN lhs MK_RPAREN MK_SEMICOLON {if(DEBUG) printf("stmt: write lhs called at %d\n", linenumber);}
-| RETURN expr MK_SEMICOLON {if(DEBUG) printf("stmt: return expr;");}
-| error {if(DEBUG)  printf("Error in stmt production \n"); }
-/* other C-- statements */
-;
+stmt    : MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;}
+        | IF MK_LPAREN expr MK_RPAREN stmt else_tail 
+        { debug("stmt: if(expr) stmt"); }
+        | WHILE MK_LPAREN expr MK_RPAREN stmt {debug("stmt: while(expr) stmt");}
+        | FOR MK_LPAREN assign_expr MK_SEMICOLON expr MK_SEMICOLON assign_expr MK_RPAREN stmt {debug("stmt: for(assign_expr expr expr) stmt");} 
+        | assign_expr MK_SEMICOLON {debug("stmt: assign_expr");}
+        | WRITE MK_LPAREN SCONST MK_RPAREN MK_SEMICOLON {debug("stmt: write string constant called at %d", linenumber);}
+        | WRITE MK_LPAREN lhs MK_RPAREN MK_SEMICOLON {debug("stmt: write lhs called at %d", linenumber);}
+        | RETURN expr MK_SEMICOLON {debug("stmt: return expr;");}
+        | error { debug("Error in stmt production"); }
+        /* other C-- statements */
+        ;
 
-else_tail:
-ELSE stmt {if(DEBUG) printf("stmt: if(expr) { stmt } else { stmt} \n");} 
-|
-;
+else_tail   : ELSE stmt {debug("stmt: if(expr) { stmt } else { stmt}");} 
+            |
+            ;
 
-assign_expr: 
-lhs OP_ASSIGN assign_expr_tail 
-;
+assign_expr : lhs OP_ASSIGN assign_expr_tail 
+            ;
 
-assign_expr_tail:
-expr  {if(DEBUG) printf("lhs=expr\n");}
-| READ MK_LPAREN MK_RPAREN {if(DEBUG) printf("lhs=read()\n");} 
-| FREAD MK_LPAREN MK_RPAREN {if(DEBUG) printf("lhs=fread()\n");}
-| function_call {if(DEBUG) printf("lhs=function_call\n");}
-;
+assign_expr_tail    : expr  {debug("lhs=expr");}
+                    | READ MK_LPAREN MK_RPAREN {debug("lhs=read()");} 
+                    | FREAD MK_LPAREN MK_RPAREN {debug("lhs=fread()");}
+                    | function_call {debug("lhs=function_call");}
+                    ;
 
 function_call: ID MK_LPAREN call_param_list MK_RPAREN
 ;
@@ -181,15 +178,13 @@ expr_member: MK_DOT lhs
 ;
 
 
-expr: lhs {if(DEBUG) printf("expr: lhs\n");}
-| MK_LPAREN expr MK_RPAREN {if(DEBUG) printf("expr: (expr)\n");}  
-| expr binop expr {if(DEBUG) printf("expr: expr binop expr\n");}
-| unop expr {if(DEBUG) printf("expr: unop expr\n");}
-/*| expr binop CONST  {printf("expr: expr binop CONST\n");}*/
-/*| ID  {printf("expr: ID\n");}*/
-| ICONST {if(DEBUG) printf("expr: ICONST\n");}
-| FCONST {if(DEBUG) printf("expr: FCONST\n");}
-;
+expr    : lhs {}
+        | MK_LPAREN expr MK_RPAREN {}
+        | expr binop expr {}
+        | unop expr {}
+        | ICONST {}
+        | FCONST {}
+        ;
 
 binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE | 
        OP_PLUS | OP_MINUS | OP_TIMES | OP_DIVIDE
@@ -198,46 +193,37 @@ binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE |
 unop: OP_NOT | OP_MINUS
 ;
 
-decl_list : decl_list decl  { printf("this rule was hit\n");}
-| decl 
-|
+decl_list   : decl_list decl  {}
+            | decl 
+            |
+            ;
+
+decl    : type_decl MK_SEMICOLON 
+        | var_decl  MK_SEMICOLON
+        ;
+
+var_decl    : type id_list 
+            {
+                debug("parser::var_decl");
+                //Add id in $2 to symbol table with type and scope info
+                //$2->type = $1;
+                if (!insert_symbol($2, cur_scope)) {
+                    yyerror("variable %s is already declared in the same scope", $2);
+                } else {
+                    $$ = $2;
+                }
+            }
 ;
 
-decl : type_decl MK_SEMICOLON | var_decl  MK_SEMICOLON
-;
-
-var_decl : type id_list {
-    if (DEBUG) {
-        printf("parser::var_decl\n");
-        printf("\t$1: %d, $2: %d\n", $1, $2);
-    }
-    //Add id in $2 to symbol table with type and scope info
-    //$2->type = $1;
-    if (!insert_symbol($2, cur_scope)) {
-        // error
-        //fprintf(stderr, "ERROR: variable %s already exists!\n", $2->name);
-    } else {
-        $$ = $2;
-    }
-}
-;
-
-id_list : ID id_tail id_list_tail 
+id_list : ID id_tail
         {
-            if (DEBUG) {
-                printf("parser::id_list\n");
-                printf("\tID: %s\n", $1);
-            }
-            $$ = create_symbol($1, cur_scope);
-            if (DEBUG) {
-                //printf("parser:id_list $$->name %s\n", $$->name);
-            }
+            debug("parser::id_list");
+            debug("\tID->name: %s", $1->name);
+            $$ = $1;
         }
-;
-
-id_list_tail    : MK_COMMA id_list
-                |
-                ;
+        | id_list MK_COMMA ID id_tail 
+        |
+        ;
 
 id_tail : MK_LB ICONST MK_RB id_tail 
         | OP_ASSIGN ICONST 
@@ -268,8 +254,8 @@ struct_decl     : STRUCT ID MK_LBRACE decl_list MK_RBRACE;
 
 typedef_decl    : TYPEDEF type ID 
                 { 
-                    if (DEBUG) printf("inserting %s\n", $3); 
-                    insert_type($3); 
+                    debug("parser::typedef_decl inserting %s", $3->name);
+                    insert_type($3->name); 
                 }
                 ;
 

@@ -83,11 +83,18 @@ return TYPEDEF;}
 {libFRead}      return FREAD;
 {libWrite}      return WRITE;
 
-{ID}            { 
-    yylval.str = yytext;
-    if(DEBUG) printf("lexer::ID yylval.str: %s\n", yylval.str);
+{ID} { 
+    symtab_entry *s = lookup_symtab(yytext, cur_scope);
+    if (!s) {
+        yylval.s = create_symbol(yytext, cur_scope);
+    } else  {
+        yylval.s = s;
+        debug("lexer::ID ID \"%s\" already exists", yytext);
+    }
+    debug("lexer::ID yytext: %s, yyval.s->name: %s", yytext, yylval.s->name);
+
     if (is_type_exists(yytext)) {
-        if (DEBUG) printf("lexer::ID %s is a user defined type\n", yytext);
+        debug("lexer::ID\"%s\" is a user defined type", yytext);
         return TYPEDEF_NAME;
     } else {
         return ID; 
