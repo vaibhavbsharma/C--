@@ -143,8 +143,10 @@ void **ht_to_list(entry_t **h_table, int *size) {
         entry_t *handle = NULL;
         do {
             handle = h_table[i];
-            list[ind++] = handle->data;
-            handle = handle -> next;
+            if(handle) {
+	      list[ind++] = handle->data;
+	      handle = handle -> next;
+	    }
         } while(handle);
     }
     *size = ind;

@@ -1,5 +1,9 @@
 int a, b, c;
 
+int f1(int a, int b) {
+    return a+b;
+}
+
 int main(int b) {
     float f;
     int a;
@@ -8,5 +12,6 @@ int main(int b) {
     a=c+4+a;
     /*a=b+f;*/
     a=4.0+f;
+    a=f1(1,2);
 }
 

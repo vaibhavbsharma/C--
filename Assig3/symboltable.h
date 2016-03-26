@@ -63,4 +63,9 @@ symtab_entry *lookup_symtab_prevscope(char *id_name, int scope);
 */
 symtab_entry *create_symbol(char *id_name, int scope);
 
+/** Delete IDs in symbol table
+* @param scope    the scope in which all variables are to be deleted
+ */
+void delete_scope(int scope);
+
 #endif

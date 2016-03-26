@@ -36,3 +36,11 @@ symtab_entry *create_symbol(char *id_name, int scope) {
     return s;
 }
 
+void delete_scope(int scope) {
+  void **list;
+  int sz,i;
+  list = ht_to_list(symtab,&sz);
+  for(i=0;i<sz;i++) {
+    symtab_entry *tmp = (symtab_entry *)list[i];
+  }
+}

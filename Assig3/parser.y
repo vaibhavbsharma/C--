@@ -95,10 +95,13 @@ global_decl : decl_list function_decl  {
 ;
 
 function_decl : type ID MK_LPAREN  {cur_scope++;} param_list MK_RPAREN MK_LBRACE  block MK_RBRACE {
+  //TODO delete all variables created in the previous scope
+  //delete_scope(cur_scope);
   cur_scope--;
   debug("function_decl");
   symtab_entry *handle = $<s>2;
-  handle->type = $<type_info>1;//TODO: not sure if type information is to be maintained for functions
+  //TODO: not sure if type information is to be maintained for function arguments
+  handle->type = $<type_info>1;
   if (!insert_symbol(handle, cur_scope)) {
     yyerror("variable %s is already declared", $2);
   } else {
