@@ -22,6 +22,7 @@ static int linenumber = 1;
 
 %type <type_info> param_type type 
 %type <s> var_decl id_list
+%type <s> param_var_decl param_id_list
 
 %token <s> ID
 %token <const_int> ICONST
@@ -92,7 +93,18 @@ global_decl : decl_list function_decl  {
 | function_decl
 ;
 
-function_decl : type ID MK_LPAREN param_list MK_RPAREN MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;debug("function_decl");}
+function_decl : type ID MK_LPAREN  {cur_scope++;} param_list MK_RPAREN MK_LBRACE  block MK_RBRACE {
+  cur_scope--;
+  debug("function_decl");
+  symtab_entry *handle = $<s>2;
+  handle->type = $<type_info>1;//TODO: not sure if type information is to be maintained for functions
+  if (!insert_symbol(handle, cur_scope)) {
+    yyerror("variable %s is already declared", $2);
+  } else {
+    symtab_entry *s = lookup_symtab(handle->name, cur_scope);
+    debug("parser::function_decl symbol inserted successfully. name: %s, scope: %d, type: %d", s->name, s->scope, s->type);
+  }
+}
 ;
 
 block: decl_list stmt_list  {debug("parser::block decl_list stmt_list");}
@@ -109,10 +121,21 @@ param_var_decl {debug("param_list: param_var_decl");}
 |
 ; 
 
-param_var_decl : param_type param_id_list
+param_var_decl : param_type param_id_list {
+                //Add id in $2 to symbol table with type and scope info
+                symtab_entry *handle = $<s>2;
+		handle->type = $<type_info>1;
+		if (!insert_symbol(handle, cur_scope)) {
+		  yyerror("variable %s is already declared", $2);
+		} else {
+		  symtab_entry *s = lookup_symtab(handle->name, cur_scope);
+		  debug("parser::param_var_decl symbol inserted successfully. name: %s, scope: %d, type: %d", s->name, s->scope, s->type);
+		}
+                $2->type = $1;
+            }
 ;
 
-param_id_list: ID param_id_tail  
+param_id_list: ID param_id_tail {$$=$1;} 
 ;
 
 param_id_tail: MK_LB ICONST MK_RB param_id_tail

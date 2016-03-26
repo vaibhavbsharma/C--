@@ -1,8 +1,10 @@
 int a, b, c;
 
-int main() {
-    int a = 4;
-    int c;
+int main(int b) {
     int a;
+    int c;
+    a=b+4;
 }
+
+void main() {}
 

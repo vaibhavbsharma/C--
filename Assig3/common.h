@@ -1,6 +1,7 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#define DEBUG
 
 /** a pseudo-itoa that converts an integer to string 
 * @param i    an integer to convert
