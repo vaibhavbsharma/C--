@@ -1,7 +1,7 @@
 int a, b, c;
 
-int f1(int a, int b) {
-    return a+b;
+int f1(int a1, int b1) {
+    return a1+b1;
 }
 
 int main(int b) {
@@ -11,7 +11,7 @@ int main(int b) {
     /*a=c+4.0;*/
     a=c+4+a;
     /*a=b+f;*/
-    a=4.0+f;
+    /*a=4.0+f;*/
     a=f1(1,2);
 }
 

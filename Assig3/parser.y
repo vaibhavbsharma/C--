@@ -21,7 +21,7 @@ static int linenumber = 1;
 }
 
 %type <type_info> param_type type  
-%type <s> var_decl id_list expr assign_expr_tail lhs assign_expr
+%type <s> var_decl id_list expr assign_expr_tail lhs assign_expr function_call
 %type <s> param_var_decl param_id_list
 
 
@@ -180,10 +180,15 @@ lhs OP_ASSIGN assign_expr_tail
 assign_expr_tail    : expr  {debug("lhs=expr");$$=$1;}
                     | READ MK_LPAREN MK_RPAREN {debug("lhs=read()");} 
                     | FREAD MK_LPAREN MK_RPAREN {debug("lhs=fread()");}
-                    | function_call {debug("lhs=function_call");}
+| function_call {debug("lhs=function_call");$$=$1;}
                     ;
 
-function_call: ID MK_LPAREN call_param_list MK_RPAREN
+function_call: ID MK_LPAREN call_param_list MK_RPAREN 
+{
+  symtab_entry *s=lookup_symtab($<s>1->name,0);
+  if(!s) yyerror("call to undefined function");
+  else $$=s;//TODO maybe free the symtab_entry in $1 ?
+}
 ;
 
 call_param_list: lhs call_param_list_tail
