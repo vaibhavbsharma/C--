@@ -7,7 +7,7 @@ YACCFLAG =
 LIBS = -lfl 
 
 parser: parser.tab.o typetable.o symboltable.o common.o
-	$(CC) -o $(TARGET) parser.tab.o typetable.o hashtable.o symboltable.o $(LIBS)
+	$(CC) -o $(TARGET) parser.tab.o typetable.o hashtable.o symboltable.o common.o $(LIBS)
 
 mac: parser.tab.o typetable.o symboltable.o common.o
 	$(CC) -o $(TARGET) parser.tab.o typetable.o hashtable.o symboltable.o common.o -ll

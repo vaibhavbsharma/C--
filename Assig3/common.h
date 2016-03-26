@@ -9,14 +9,13 @@
 * */
 char* myitoa(int i);
 
-#endif
 
 #ifdef DEBUG
 #include <stdio.h>
 #include <stdlib.h>
 
 #define debug(M, ...) fprintf(stderr, "DEBUG %s:%d: " M "\n", __FILE__, __LINE__, ##__VA_ARGS__)
-#elif
-#define debug(M, ...)
 #endif
 
+
+#endif
