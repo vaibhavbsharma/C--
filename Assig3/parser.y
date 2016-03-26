@@ -21,7 +21,7 @@ static int linenumber = 1;
 }
 
 %type <type_info> param_type type  
-%type <s> var_decl id_list expr assign_expr_tail
+%type <s> var_decl id_list expr assign_expr_tail lhs assign_expr
 %type <s> param_var_decl param_id_list
 
 
@@ -164,8 +164,15 @@ else_tail   : ELSE stmt {debug("stmt: if(expr) { stmt } else { stmt}");}
             |
             ;
 
-assign_expr : lhs OP_ASSIGN assign_expr_tail 
-            ;
+assign_expr : 
+lhs OP_ASSIGN assign_expr_tail 
+{
+  if($1->type != $3->type) {
+    yyerror("type expression mismatch with =");
+  }
+  $$=$1;
+}
+;
 
 assign_expr_tail    : expr  {debug("lhs=expr");$$=$1;}
                     | READ MK_LPAREN MK_RPAREN {debug("lhs=read()");} 
@@ -188,7 +195,7 @@ call_param_list_tail: MK_COMMA lhs call_param_list_tail
 |
 ;
 
-lhs: ID expr_id_tail expr_member
+lhs: ID expr_id_tail expr_member {$$=$1;}
 ;
 
 
@@ -207,7 +214,9 @@ expr    : lhs {}
 | expr binop expr {
   debug("parser::expr: expr binop expr");
   if($1->type != $3->type) {
-    yyerror("%s type expression mismatch");
+    yyerror("type expression mismatch with binary operator");
+    //TODO: get these %s's to work
+    //yyerror("%s and %s type expression mismatch",$1,$3);
   }
   $$=$1;
 }

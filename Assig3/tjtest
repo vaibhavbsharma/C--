@@ -1,8 +1,12 @@
 int a, b, c;
 
 int main(int b) {
+    float f;
     int a;
     int c;
-    a=c+4;
+    /*a=c+4.0;*/
+    a=c+4+a;
+    /*a=b+f;*/
+    a=4.0+f;
 }
 
