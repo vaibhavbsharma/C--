@@ -3,8 +3,6 @@ int a, b, c;
 int main(int b) {
     int a;
     int c;
-    a=b+4;
+    a=c+4;
 }
-
-void main() {}
 

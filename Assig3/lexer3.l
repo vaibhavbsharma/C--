@@ -125,11 +125,26 @@ error    .
 {op_times}      return OP_TIMES;
 {op_divide}     return OP_DIVIDE;
 {i_constant}      {  
-    yylval.const_int = atoi(yytext); 
-    return ICONST;
+    //yylval.const_int = atoi(yytext); 
+    symtab_entry *s = lookup_symtab(yytext, cur_scope);
+    if (!s) {
+        yylval.s = create_symbol(yytext, cur_scope);
+    } else  {
+        yylval.s = s;
     }
+    yylval.s->type = INT_TY;
+    return ICONST;
+}
+
 {f_constant}      {  
-    yylval.const_float = atof(yytext); 
+    //yylval.const_float = atof(yytext); 
+    symtab_entry *s = lookup_symtab(yytext, cur_scope);
+    if (!s) {
+        yylval.s = create_symbol(yytext, cur_scope);
+    } else  {
+        yylval.s = s;
+    }
+    yylval.s->type = FLOAT_TY;
     return FCONST;
     }
 

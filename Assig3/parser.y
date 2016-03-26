@@ -20,13 +20,14 @@ static int linenumber = 1;
   type_enum type_info;
 }
 
-%type <type_info> param_type type 
-%type <s> var_decl id_list
+%type <type_info> param_type type  
+%type <s> var_decl id_list expr assign_expr_tail
 %type <s> param_var_decl param_id_list
 
+
 %token <s> ID
-%token <const_int> ICONST
-%token <const_float> FCONST
+%token <s> ICONST
+%token <s> FCONST
 %token SCONST
 %token <type_info> TYPEDEF_NAME
 %token <type_info> VOID
@@ -166,7 +167,7 @@ else_tail   : ELSE stmt {debug("stmt: if(expr) { stmt } else { stmt}");}
 assign_expr : lhs OP_ASSIGN assign_expr_tail 
             ;
 
-assign_expr_tail    : expr  {debug("lhs=expr");}
+assign_expr_tail    : expr  {debug("lhs=expr");$$=$1;}
                     | READ MK_LPAREN MK_RPAREN {debug("lhs=read()");} 
                     | FREAD MK_LPAREN MK_RPAREN {debug("lhs=fread()");}
                     | function_call {debug("lhs=function_call");}
@@ -203,11 +204,17 @@ expr_member: MK_DOT lhs
 
 expr    : lhs {}
         | MK_LPAREN expr MK_RPAREN {}
-        | expr binop expr {}
-        | unop expr {}
-        | ICONST {}
-        | FCONST {}
-        ;
+| expr binop expr {
+  debug("parser::expr: expr binop expr");
+  if($1->type != $3->type) {
+    yyerror("%s type expression mismatch");
+  }
+  $$=$1;
+}
+| unop expr {$$=$2;}
+| ICONST {$$=$1;}
+| FCONST {$$=$1;}
+;
 
 binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE | 
        OP_PLUS | OP_MINUS | OP_TIMES | OP_DIVIDE
