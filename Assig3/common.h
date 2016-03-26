@@ -1,7 +1,6 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
-#define DEBUG
 
 /** a pseudo-itoa that converts an integer to string 
 * @param i    an integer to convert
@@ -15,6 +14,8 @@ char* myitoa(int i);
 #include <stdlib.h>
 
 #define debug(M, ...) fprintf(stderr, "DEBUG %s:%d: " M "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#else
+#define debug(M, ...)
 #endif
 
 
