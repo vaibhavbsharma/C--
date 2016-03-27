@@ -6,9 +6,6 @@
 #include <assert.h>
 #include "common.h"
 
-#define ID_SIZ 257
-
-
 typedef enum {
   VOID_TY, INT_TY, FLOAT_TY, TYPEDEF_TY, STRUCT_TY, UNION_TY, 
   ARR_INT_TY, ARR_FLOAT_TY
@@ -63,7 +60,7 @@ symtab_entry *lookup_symtab_prevscope(char *id_name, int scope);
 */
 symtab_entry *create_symbol(char *id_name, int scope);
 
-/** Delete IDs in symbol table
+/** Delete IDs in symbol table with a given scope
 * @param scope    the scope in which all variables are to be deleted
  */
 void delete_scope(int scope);

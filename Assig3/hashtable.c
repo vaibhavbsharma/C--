@@ -106,6 +106,7 @@ entry_t **h_init() {
     for (i=0; i<HT_SIZ; i++) {
         h_table[i] = malloc(sizeof(entry_t));
         h_table[i]->index = -1;
+        h_table[i]->next = NULL;
     }
     ht_size = 0;
     return h_table;
@@ -134,6 +135,10 @@ void **ht_to_list(entry_t **h_table, int *size) {
     int ind = 0;
     int i;
     void **list = malloc(ht_size * sizeof(void*));
+    if (!h_table) {
+        fprintf(stderr, "wrong pointer to a hash table\n");
+        return NULL;
+    }
     /* traverse through the table and copy only 
      * the pointers to data object to the list */
     for (i=0; i<HT_SIZ; i++) {
@@ -141,17 +146,17 @@ void **ht_to_list(entry_t **h_table, int *size) {
             continue;
         }
         entry_t *handle = NULL;
+        handle = h_table[i];
         do {
-            handle = h_table[i];
-            if(handle) {
+            if (handle) {
                 list[ind++] = handle->data;
-                handle = handle -> next;
             }
-        } while(handle);
+            handle = handle->next;
+        } while (handle);
     }
     *size = ind;
     for (i=0; i<ind; i++) {
-        debug("id: %s", (char *) list[i]);
+        debug("hashtable.c::ht_to_list() id: %s", (char *) list[i]);
     }
     return list;
 }
@@ -164,7 +169,7 @@ bool h_remove(entry_t **h_table, char *key) {
     /* traverse the linked list of the index `hash(key)` from the head */
     entry_t *prev = NULL;
     entry_t *curr = h_table[hash(key)];
-    while (curr != NULL && curr != found) {
+    while (curr->next != NULL && curr != found) {
         prev = curr;
         curr = curr->next;
     }
@@ -182,10 +187,9 @@ bool h_remove(entry_t **h_table, char *key) {
         free(curr->key);
         free(curr->data);
         curr->index = -1;
-        curr->key = NULL;
-        curr->data = NULL;
         curr->next = NULL;
     }
+    debug("hashtable.c::h_remove(%s)", key);
     return true;
 }
 

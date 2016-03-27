@@ -19,5 +19,10 @@ char* myitoa(int i);
 #define debug(M, ...)
 #endif
 
+/** maximum size of an identifier */
+#define ID_SIZ 257
+
+/** size of ID + 3 (for scope prefix which can be up to 3 digits) */
+#define SYMTAB_KEY_SIZ 260  
 
 #endif

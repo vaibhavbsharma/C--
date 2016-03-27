@@ -96,8 +96,7 @@ global_decl : decl_list function_decl  {
 
 function_decl : type ID MK_LPAREN  {cur_scope++;} param_list MK_RPAREN MK_LBRACE  block MK_RBRACE {
     //TODO delete all variables created in the previous scope
-    //delete_scope(cur_scope);
-    cur_scope--;
+    delete_scope(cur_scope--);
     symtab_entry *handle = $<s>2;
 
     //TODO: not sure if type information is to be maintained for function arguments
