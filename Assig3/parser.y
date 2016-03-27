@@ -95,19 +95,20 @@ global_decl : decl_list function_decl  {
 ;
 
 function_decl : type ID MK_LPAREN  {cur_scope++;} param_list MK_RPAREN MK_LBRACE  block MK_RBRACE {
-  //TODO delete all variables created in the previous scope
-  //delete_scope(cur_scope);
-  cur_scope--;
-  debug("function_decl");
-  symtab_entry *handle = $<s>2;
-  //TODO: not sure if type information is to be maintained for function arguments
-  handle->type = $<type_info>1;
-  if (!insert_symbol(handle, cur_scope)) {
-    yyerror("variable %s is already declared", $2);
-  } else {
-    symtab_entry *s = lookup_symtab(handle->name, cur_scope);
-    debug("parser::function_decl symbol inserted successfully. name: %s, scope: %d, type: %d", s->name, s->scope, s->type);
-  }
+    //TODO delete all variables created in the previous scope
+    //delete_scope(cur_scope);
+    cur_scope--;
+    symtab_entry *handle = $<s>2;
+
+    //TODO: not sure if type information is to be maintained for function arguments
+    handle->type = $<type_info>1;
+    if (!insert_symbol(handle, cur_scope)) {
+        yyerror("variable %s is already declared", $2);
+    } else {
+        symtab_entry *s = lookup_symtab(handle->name, cur_scope);
+        debug("parser::function_decl symbol inserted successfully. \
+                name: %s, scope: %d, type: %d", s->name, s->scope, s->type);
+    }
 }
 ;
 
@@ -128,15 +129,17 @@ param_var_decl {debug("param_list: param_var_decl");}
 param_var_decl : param_type param_id_list {
                 //Add id in $2 to symbol table with type and scope info
                 symtab_entry *handle = $<s>2;
-		handle->type = $<type_info>1;
-		if (!insert_symbol(handle, cur_scope)) {
-		  yyerror("variable %s is already declared", $2);
-		} else {
-		  symtab_entry *s = lookup_symtab(handle->name, cur_scope);
-		  debug("parser::param_var_decl symbol inserted successfully. name: %s, scope: %d, type: %d", s->name, s->scope, s->type);
-		}
+                handle->type = $<type_info>1;
+                if (!insert_symbol(handle, cur_scope)) {
+                    yyerror("variable %s is already declared", $2);
+                } else {
+                    symtab_entry *s = lookup_symtab(handle->name, cur_scope);
+                    debug("parser::param_var_decl symbol inserted successfully.\
+                            name: %s, scope: %d, type: %d", 
+                            s->name, s->scope, s->type);
+                }
                 $2->type = $1;
-            }
+                }
 ;
 
 param_id_list: ID param_id_tail {$$=$1;} 
@@ -185,9 +188,12 @@ assign_expr_tail    : expr  {debug("lhs=expr");$$=$1;}
 
 function_call: ID MK_LPAREN call_param_list MK_RPAREN 
 {
-  symtab_entry *s=lookup_symtab($<s>1->name,0);
-  if(!s) yyerror("call to undefined function");
-  else $$=s;//TODO maybe free the symtab_entry in $1 ?
+    symtab_entry *s=lookup_symtab($<s>1->name,0);
+    if (!s) { 
+        yyerror("call to undefined function");
+    } else {
+        $$=s;//TODO maybe free the symtab_entry in $1 ?
+    }
 }
 ;
 

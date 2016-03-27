@@ -1,5 +1,5 @@
 /**@file hashtable.c
-*
+ *
  * A simple hash table implementation
  *
  * @author Taejoon Byun
@@ -122,7 +122,7 @@ bool h_insert(entry_t **h_table, char *key, void *data) {
 }
 
 void *h_get(entry_t **h_table, char *key) {
-  entry_t *found = h_get_entry(h_table, key);
+    entry_t *found = h_get_entry(h_table, key);
     if (found != NULL) {
         return found->data;
     } else {
@@ -144,9 +144,9 @@ void **ht_to_list(entry_t **h_table, int *size) {
         do {
             handle = h_table[i];
             if(handle) {
-	      list[ind++] = handle->data;
-	      handle = handle -> next;
-	    }
+                list[ind++] = handle->data;
+                handle = handle -> next;
+            }
         } while(handle);
     }
     *size = ind;
@@ -157,7 +157,7 @@ void **ht_to_list(entry_t **h_table, int *size) {
 }
 
 bool h_remove(entry_t **h_table, char *key) {
-  entry_t *found = h_get_entry(h_table, key);
+    entry_t *found = h_get_entry(h_table, key);
     if (found == NULL) {
         return false;
     }

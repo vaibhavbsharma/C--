@@ -20,10 +20,10 @@
 
 /** hash table entry */
 typedef struct entry_t {
-    unsigned int index; /**< index */
-    char *key;          /**< key value */
-    void *data;         /**< the pointer to the data (of any type) */
-    struct entry_t *next;      /**< a pointer to the next entry */
+    unsigned int index;     /**< index */
+    char *key;              /**< key value */
+    void *data;             /**< the pointer to the data (of any type) */
+    struct entry_t *next;   /**< a pointer to the next entry */
 } entry_t;
 
 
@@ -37,10 +37,10 @@ entry_t **h_init();
 
 /** Insert a <i> key - data </i> pair to the hash table
  *
- * @param h_table pointer to the hash table object
- * @param key the key string
- * @param data a pointer to the data object of any kind
- * @return true if succeed, false if key collision occurs
+ * @param h_table   pointer to the hash table object
+ * @param key       the key string
+ * @param data      a pointer to the data object of any kind
+ * @return          true if succeed, false if key collision occurs
  *
  * @see h_insert_entry ll_insert
  * */
@@ -48,27 +48,28 @@ bool h_insert(entry_t **h_table, char *key, void *data);
 
 /** Retrieve a data object that corresponds to a given key from the hash table
  *
- * @param h_table pointer to the hash table object
- * @param  key key to search for
- * @return the data object of an entry with <tt>key</tt> if found, 
- *         or <tt>NULL</tt> otherwise.
+ * @param h_table   pointer to the hash table object
+ * @param           key key to search for
+ * @return          the data object of an entry with <tt>key</tt> if found, 
+ *                  or <tt>NULL</tt> otherwise.
  * */
 void *h_get(entry_t **h_table, char *key);
 
 /** Retrieve all the entries in the hash table as a list
  *
- * @param h_table pointer to the hash table object
- * @param   size a point to an integer where the size of the returning list
- *          is to be stored
- * @return  list of pointers to data object
+ * @param h_table   pointer to the hash table object
+ * @param size      a point to an integer where the size of the returning list
+ *                  is to be stored
+ * @return          list of pointers to data object
  */
 void **ht_to_list(entry_t **h_table, int *size);
 
 /** Remove an entry from the table
  *
- * @param h_table pointer to the hash table object
- * @param key  the key to remove 
- * @return true if successful, false if no element with <tt>key</tt> exists
+ * @param h_table   pointer to the hash table object
+ * @param key       the key to remove 
+ * @return          true if successful, false if no element with <tt>key</tt> 
+ *                  exists
  * */
 bool h_remove(entry_t **h_table, char *key);
 
