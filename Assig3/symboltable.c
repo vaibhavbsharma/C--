@@ -48,7 +48,7 @@ symtab_entry *create_symbol(char *id_name, int scope) {
 }
 
 void delete_scope(int scope) {
-    int sz, key_ind = 0;
+    int sz;
     // hasth table entries in a list, for a faster search
     debug("symboltable::delete_scope(%d)", scope);
     void **list = ht_to_list(symtab,&sz);
