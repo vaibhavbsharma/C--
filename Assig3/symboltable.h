@@ -11,7 +11,7 @@ typedef enum {
   ARR_INT_TY, ARR_FLOAT_TY
 } type_enum;
 
-typedef struct {
+typedef struct symtab_entry{
   char name[ID_SIZ];
   int scope;
   enum {
