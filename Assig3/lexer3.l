@@ -99,9 +99,9 @@ error    .
         yylval.s = create_symbol(yytext, cur_scope);
     } else  {
         yylval.s = s;
-        debug("lexer::ID ID \"%s\" already exists", yytext);
+        //debug("lexer::ID ID \"%s\" already exists", yytext);
     }
-    debug("lexer::ID yytext: %s, yyval.s->name: %s", yytext, yylval.s->name);
+    //debug("ID yytext: %s, yyval.s->name: %s", yytext, yylval.s->name);
 
     if (is_type_exists(yytext)) {
         debug("lexer::ID\"%s\" is a user defined type", yytext);

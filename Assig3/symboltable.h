@@ -12,14 +12,15 @@ typedef enum {
 } type_enum;
 
 typedef struct symtab_entry{
-  char name[ID_SIZ];
-  int scope;
-  enum {
-    FUNCTION, ARRAY
-  } kind;
-  type_enum type;
-  int n_arg;
-  struct symtab_entry* next;
+    char name[ID_SIZ];
+    int scope;
+    type_enum type;
+    int n_arg;
+    enum {
+        NONE, FUNCTION, ARRAY
+    } kind;
+    int dim;                    //< dimension
+    struct symtab_entry* next;
 } symtab_entry;
 
 /** A global symbol table */

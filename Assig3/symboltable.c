@@ -17,8 +17,7 @@ char* gen_key(char *name, int scope) {
 }
 
 bool insert_symbol(symtab_entry *s, int scope) {
-    debug("symboltable::insert_symbol(): scope %d, s->name %s", 
-            scope, s->name);
+    //debug("symboltable::insert_symbol(): scope %d, s->name %s", scope, s->name);
     /* use the scope as a prefix of the key in order to differentiate IDs 
      * with the same name in different scopes */
     return h_insert(symtab, gen_key(s->name, scope), s);
@@ -40,10 +39,10 @@ symtab_entry *lookup_symtab_prevscope(char *id_name, int scope) {
 symtab_entry *create_symbol(char *id_name, int scope) {
     assert(strlen(id_name) < 257);
     symtab_entry *s = malloc(sizeof(symtab_entry));
+    memset(s, 0, sizeof(symtab_entry));
     strcpy(s->name, id_name);
     s->scope = scope;
-    debug("symboltable::create_symbol() id_name: %s, scope: %d", 
-            s->name, s->scope);
+    //debug("symboltable::create_symbol() id_name: %s, scope: %d", s->name, s->scope);
     return s;
 }
 

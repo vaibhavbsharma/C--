@@ -10,6 +10,6 @@ void insert_type(char*);
 
 int is_type_exists( char*);
 
-void init();
+void init_typetab();
 
 #endif

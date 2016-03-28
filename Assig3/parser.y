@@ -21,8 +21,8 @@ static int linenumber = 1;
 }
 
 %type <type_info> param_type type  
-%type <s> var_decl id_list expr assign_expr_tail lhs assign_expr function_call
-%type <s> param_var_decl param_id_list
+%type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr 
+%type <s> param_var_decl param_id_list function_call
 
 
 %token <s> ID
@@ -96,15 +96,13 @@ global_decl : decl_list function_decl  {
 
 function_decl : type ID MK_LPAREN  {cur_scope++;} param_list MK_RPAREN MK_LBRACE  block MK_RBRACE {
     delete_scope(cur_scope--);
-    symtab_entry *handle = $<s>2;
-
-    handle->type = $<type_info>1;
-    if (!insert_symbol(handle, cur_scope)) {
+    $<s>2->type = $<type_info>1;
+    $<s>2->kind = FUNCTION;
+    if (!insert_symbol($2, cur_scope)) {
         yyerror("variable %s is already declared", $2);
     } else {
-        symtab_entry *s = lookup_symtab(handle->name, cur_scope);
-        debug("parser::function_decl symbol inserted successfully. \
-                name: %s, scope: %d, type: %d", s->name, s->scope, s->type);
+        symtab_entry *s = lookup_symtab($2->name, cur_scope);
+        debug("function_decl: symbol inserted. (name: %s, scope: %d, type: %d, kind: %d)", s->name, s->scope, s->type, s->kind);
     }
 }
 ;
@@ -131,9 +129,7 @@ param_var_decl : param_type param_id_list {
                     yyerror("variable %s is already declared", $2);
                 } else {
                     symtab_entry *s = lookup_symtab(handle->name, cur_scope);
-                    debug("parser::param_var_decl symbol inserted successfully.\
-                            name: %s, scope: %d, type: %d", 
-                            s->name, s->scope, s->type);
+                    debug("param_var_decl: symbol inserted. (name: %s, scope: %d, type: %d, kind: %d)", s->name, s->scope, s->type, s->kind);
                 }
                 $2->type = $1;
                 }
@@ -150,31 +146,43 @@ param_id_tail: MK_LB ICONST MK_RB param_id_tail
 param_type: INT | FLOAT | VOID | STRUCT ID
 ;
 
-stmt    : MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;}
-        | IF MK_LPAREN expr MK_RPAREN stmt else_tail 
-        { debug("stmt: if(expr) stmt"); }
-        | WHILE MK_LPAREN expr MK_RPAREN stmt {debug("stmt: while(expr) stmt");}
-        | FOR MK_LPAREN assign_expr MK_SEMICOLON expr MK_SEMICOLON assign_expr MK_RPAREN stmt {debug("stmt: for(assign_expr expr expr) stmt");} 
+stmt    : block_stmt
+        | if_stmt
+        | while_stmt MK_SEMICOLON
+        | for_stmt
         | assign_expr MK_SEMICOLON {debug("stmt: assign_expr");}
-        | WRITE MK_LPAREN SCONST MK_RPAREN MK_SEMICOLON {debug("stmt: write string constant called at %d", linenumber);}
-        | WRITE MK_LPAREN lhs MK_RPAREN MK_SEMICOLON {debug("stmt: write lhs called at %d", linenumber);}
-        | RETURN expr MK_SEMICOLON {debug("stmt: return expr;");}
+        | write_stmt MK_SEMICOLON 
+        | write_lhs_stmt MK_SEMICOLON 
+        | return_stmt MK_SEMICOLON
         | error { debug("Error in stmt production"); }
         /* other C-- statements */
         ;
+
+block_stmt  : MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;}
+
+if_stmt     : IF MK_LPAREN expr MK_RPAREN stmt else_tail 
+
+while_stmt  : WHILE MK_LPAREN expr MK_RPAREN stmt {debug("stmt: while(expr) stmt");}
+
+for_stmt    : FOR MK_LPAREN assign_expr MK_SEMICOLON expr MK_SEMICOLON assign_expr MK_RPAREN stmt 
+
+write_stmt  : WRITE MK_LPAREN SCONST MK_RPAREN {debug("stmt: write string constant called at %d", linenumber);}
+
+write_lhs_stmt  : WRITE MK_LPAREN lhs MK_RPAREN {debug("stmt: write lhs called at %d", linenumber);}
+
+return_stmt : RETURN expr {debug("stmt: return expr;");}
 
 else_tail   : ELSE stmt {debug("stmt: if(expr) { stmt } else { stmt}");} 
             |
             ;
 
-assign_expr : 
-lhs OP_ASSIGN assign_expr_tail 
-{
-  if($1->type != $3->type) {
-    yyerror("type expression mismatch with =");
-  }
-  $$=$1;
-}
+assign_expr : lhs OP_ASSIGN assign_expr_tail 
+    {
+      if($1->type != $3->type) {
+        yyerror("type expression mismatch with =");
+      }
+      $$=$1;
+    }
 ;
 
 assign_expr_tail    : expr  {debug("lhs=expr");$$=$1;}
@@ -187,43 +195,43 @@ function_call: ID MK_LPAREN call_param_list MK_RPAREN
 {
     symtab_entry *s=lookup_symtab($<s>1->name,0);
     if (!s) { 
-        yyerror("call to undefined function");
+        yyerror("ID undeclared");
     } else {
         $$=s;//TODO maybe free the symtab_entry in $1 ?
     }
 }
 ;
 
-call_param_list: lhs call_param_list_tail
-| ICONST call_param_list_tail
-| FCONST call_param_list_tail
-|
-;
+call_param_list : lhs call_param_list_tail
+                | ICONST call_param_list_tail
+                | FCONST call_param_list_tail
+                |
+                ;
 
-call_param_list_tail: MK_COMMA lhs call_param_list_tail
-| MK_COMMA ICONST call_param_list_tail
-| MK_COMMA FCONST call_param_list_tail
-|
-;
+call_param_list_tail    : MK_COMMA lhs call_param_list_tail
+                        | MK_COMMA ICONST call_param_list_tail
+                        | MK_COMMA FCONST call_param_list_tail
+                        |
+                        ;
 
-lhs: ID expr_id_tail expr_member {$$=$1;}
-;
+lhs : ID expr_id_tail expr_member {$$=$1;}
+    ;
 
+expr_id_tail    : MK_LB ICONST MK_RB expr_id_tail
+                | MK_LB ID MK_RB expr_id_tail
+                |
+                ;
 
-expr_id_tail: MK_LB ICONST MK_RB expr_id_tail
-| MK_LB ID MK_RB expr_id_tail
-|
-;
-
-expr_member: MK_DOT lhs
-|
-;
+expr_member : MK_DOT lhs
+            |
+            ;
 
 
 expr    : lhs {}
         | MK_LPAREN expr MK_RPAREN {}
-| expr binop expr {
-  debug("parser::expr: expr binop expr");
+        | expr binop expr 
+{
+  debug("expr: expr binop expr");
   if($1->type != $3->type) {
     yyerror("type expression mismatch with binary operator");
     //TODO: get these %s's to work
@@ -231,10 +239,10 @@ expr    : lhs {}
   }
   $$=$1;
 }
-| unop expr {$$=$2;}
-| ICONST {$$=$1;}
-| FCONST {$$=$1;}
-;
+        | unop expr {$$=$2;}
+        | ICONST {$$=$1;}
+        | FCONST {$$=$1;}
+        ;
 
 binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE | 
        OP_PLUS | OP_MINUS | OP_TIMES | OP_DIVIDE
@@ -262,7 +270,7 @@ var_decl    : type id_list
                         yyerror("variable %s is already declared", $2);
                     } else {
                         symtab_entry *s = lookup_symtab(handle->name, cur_scope);
-                        debug("parser::var_decl symbol inserted successfully. name: %s, scope: %d, type: %d", s->name, s->scope, s->type);
+                        debug("var_decl: symbol inserted. (name: %s, scope: %d, type: %d, kind: %d)", s->name, s->scope, s->type, s->kind);
                     }
                 } while((handle = handle->next));
                 $2->type = $1;
@@ -271,10 +279,20 @@ var_decl    : type id_list
 
 id_list : ID id_tail
         {
+            if ($2->dim > 0) {
+                $1->kind = ARRAY;
+                $$->dim= $2->dim;
+                debug("id_list: ID %s is %d-dim array", $1->name, $1->dim);
+            }
             $$ = $1;
         }
         | id_list MK_COMMA ID id_tail 
         {
+            if ($4->dim > 0) {
+                $3->kind = ARRAY;
+                $3->dim= $4->dim;
+                debug("id_list: ID %s is %d-dim array", $3->name, $3->dim);
+            }
             // append at the end of the list ($1)
             symtab_entry *handle = $<s>1;
             while (handle->next) {
@@ -287,9 +305,14 @@ id_list : ID id_tail
         ;
 
 id_tail : MK_LB ICONST MK_RB id_tail 
+        {   
+            $<s>$->dim= $<s>4->dim+ 1;
+        }
         | OP_ASSIGN ICONST 
         | OP_ASSIGN FCONST
-        |
+        | { // nullable, no dimension
+            $<s>$->dim = 0; 
+        }
         ;
 
 type    : INT 
