@@ -3,12 +3,24 @@
 %{
 #include "common.h"
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include "typetable.h"
 #include "symboltable.h"
 static int linenumber = 1;
- int cur_scope=0;
+int cur_scope = 0;
+bool match_type(symtab_entry *s1, symtab_entry *s2) {
+    if (s1->kind != s2->kind || s1->type != s2->type) {
+        return false;
+    }
+    if (s1->kind == ARRAY && s2->kind == ARRAY) {
+        if (s1->dim == s2->dim) {
+            return true;
+        }
+    }
+    return false;
+}
 %}
 
 %union {
@@ -187,27 +199,27 @@ else_tail   : ELSE stmt {debug("stmt: if(expr) { stmt } else { stmt}");}
             ;
 
 assign_expr : lhs OP_ASSIGN assign_expr_tail 
-    {
-      if($1->type != $3->type) {
-        yyerror("type expression mismatch with =");
-      }
-      $$=$1;
-    }
-;
+            {
+                if (!match_type($<s>1, $<s>3)) {
+                    yyerror("type expression mismatch with =");
+                }
+                $$=$1;
+            }
+            ;
 
 assign_expr_tail    : expr  {debug("lhs=expr");$$=$1;}
                     | READ MK_LPAREN MK_RPAREN {debug("lhs=read()");} 
                     | FREAD MK_LPAREN MK_RPAREN {debug("lhs=fread()");}
-| function_call {debug("lhs=function_call");$$=$1;}
+                    | function_call {debug("lhs=function_call");$$=$1;}
                     ;
 
 function_call: ID MK_LPAREN call_param_list MK_RPAREN 
 {
-    symtab_entry *s=lookup_symtab($<s>1->name,0);
+    symtab_entry *s = lookup_symtab($<s>1->name,0);
     if (!s) { 
         yyerror("ID undeclared");
     } else {
-        $$=s;//TODO maybe free the symtab_entry in $1 ?
+        $$ = s;//TODO maybe free the symtab_entry in $1 ?
     }
 }
 ;
@@ -215,30 +227,27 @@ function_call: ID MK_LPAREN call_param_list MK_RPAREN
 call_param_list : lhs call_param_list_tail
                 | ICONST call_param_list_tail
                 | FCONST call_param_list_tail
-                |
+                | /* empty */
                 ;
 
 call_param_list_tail    : MK_COMMA lhs call_param_list_tail
                         | MK_COMMA ICONST call_param_list_tail
                         | MK_COMMA FCONST call_param_list_tail
-                        |
+                        | /* empty */
                         ;
 
 lhs: ID expr_id_tail expr_member {
-  symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
-  if(!s) s=lookup_symtab($<s>1->name,0);
+  symtab_entry *s = lookup_symtab_prevscope($<s>1->name,cur_scope);
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
 }
 | ID expr_id_tail {
-  symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
-  if(!s) s=lookup_symtab($<s>1->name,0);
+  symtab_entry *s = lookup_symtab_prevscope($<s>1->name,cur_scope);
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
 }
 | ID expr_member {
-  symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
-  if(!s) s=lookup_symtab($<s>1->name,0);
+  symtab_entry *s = lookup_symtab_prevscope($<s>1->name,cur_scope);
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
   if(s->type != STRUCT_TY) {
@@ -263,7 +272,7 @@ lhs: ID expr_id_tail expr_member {
 }
 | ID {
   symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
-  if(!s) s=lookup_symtab($<s>1->name,0);
+  if(!s) s=lookup_symtab_prevscope($<s>1->name,0);
   if(!s) yyerror("lhs: ID ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
 }
@@ -370,22 +379,22 @@ var_decl    : type id_list
 
 id_list : ID id_tail
         {
-	  debug("parser::id_list ID id_tail");
-	  /*if ($2 && $2->dim > 0) {
-                $1->kind = ARRAY;
-                $$->dim= $2->dim;
-                debug("id_list: ID %s is %d-dim array", $1->name, $1->dim);
-		}*/
+            debug("parser::id_list ID id_tail");
+            if ($2) {
+                $<s>1->kind = ARRAY;
+                $<s>1->dim = $2->dim;
+                debug("parser::id_list: %s is a %d-dim array", $1->name, $1->dim);
+            }
             $$ = $1;
         }
         | id_list MK_COMMA ID id_tail 
         {
-	  debug("parser::id_list id_list , ID id_tail");
-	  /*if ($4->dim > 0) {
-                $3->kind = ARRAY;
-                $3->dim= $4->dim;
-                debug("id_list: ID %s is %d-dim array", $3->name, $3->dim);
-		}*/
+            debug("parser::id_list id_list, ID id_tail");
+            if ($4) {
+                    $3->kind = ARRAY;
+                    $3->dim = $4->dim;
+                    debug("id_list: %s is a %d-dim array", $3->name, $3->dim);
+            }
             // append at the end of the list ($1)
             symtab_entry *handle = $<s>1;
             while (handle->next) {
@@ -398,13 +407,18 @@ id_list : ID id_tail
 
 id_tail : MK_LB ICONST MK_RB id_tail 
         {   
-	  //$<s>$->dim= $<s>4->dim+ 1;
+            debug("parser::id_tail MK_LB ICONST MK_RB id_tail");
+            if ($4) {
+                $<s>$->dim = $<s>4->dim + 1;
+            } else {
+                $<s>$->dim = 1;
+            }
         }
         | OP_ASSIGN ICONST 
         | OP_ASSIGN FCONST
-        | { // nullable, no dimension
-	  //if($<s>$ != NULL) 
-	  //  $<s>$->dim = 0; 
+        | /* empty */ 
+        {
+            $$ = NULL;  // segfault fix: return NULL when epsilon
         }
         ;
 
@@ -518,11 +532,6 @@ struct_var_decl    : type id_list
   $$=$2;
 }
 ;
-
-
-
-
-
 
 
 
