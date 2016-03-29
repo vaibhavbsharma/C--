@@ -330,13 +330,18 @@ type    : INT  {debug("parser::type INT");}
         | STRUCT struct_block {debug("parser::type STRUCT struct_block");}
         ;
 
+struct_decl_list   : 
+struct_decl_list decl  {debug("parser::struct_decl_list struct_decl_list decl");}
+| decl {debug("parser::struct_decl_list decl");} 
+;
+
 struct_or_null_block    : 
-MK_LBRACE decl_list MK_RBRACE {debug("parser::struct_or_null_block { decl_list }");}
+MK_LBRACE struct_decl_list MK_RBRACE {debug("parser::struct_or_null_block { struct_decl_list }");}
 | {debug("parser::struct_or_null_block empty string");}
 ;
 
 struct_block    : 
-MK_LBRACE decl_list MK_RBRACE {debug("parser::struct_block { decl_list }");}
+MK_LBRACE struct_decl_list MK_RBRACE {debug("parser::struct_block { struct_decl_list }");}
 ;
 
 type_decl       : struct_decl {debug("parser::type_decl struct_decl");} 
@@ -344,8 +349,8 @@ type_decl       : struct_decl {debug("parser::type_decl struct_decl");}
                 ;
 
 struct_decl     : 
-STRUCT ID MK_LBRACE decl_list MK_RBRACE {
-  debug("parser::struct_decl STRUCT ID { decl_list }");
+STRUCT ID MK_LBRACE struct_decl_list MK_RBRACE {
+  debug("parser::struct_decl STRUCT ID { struct_decl_list }");
 }
 ;
 
