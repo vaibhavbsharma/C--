@@ -42,6 +42,7 @@ symtab_entry *create_symbol(char *id_name, int scope) {
     memset(s, 0, sizeof(symtab_entry));
     strcpy(s->name, id_name);
     s->scope = scope;
+    s->next = NULL;
     s->type_ptr = NULL;
     //debug("symboltable::create_symbol() id_name: %s, scope: %d", s->name, s->scope);
     return s;

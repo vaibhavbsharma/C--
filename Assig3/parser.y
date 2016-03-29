@@ -35,7 +35,7 @@ bool match_type(symtab_entry *s1, symtab_entry *s2) {
 
 %type <type_info> param_type type  
 %type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr expr_member struct_var_decl
-%type <s> param_var_decl param_id_list function_call
+%type <s> param_var_decl param_id_list function_call param call_param_list call_param_list_tail
 %type <sf> struct_decl_list 
 %type <type_obj> struct_decl;
 
@@ -104,7 +104,7 @@ global_decl_list: global_decl_list global_decl {
 ;
 
 global_decl : decl_list function_decl  {
-    debug("parser:global_decl: decl_list function_decl");
+    debug("parser::global_decl: decl_list function_decl");
 }
 | function_decl
 ;
@@ -130,24 +130,30 @@ stmt_list: stmt_list stmt  {debug("stmt_list: stmt_list stmt");}
 |
 ;
 
-param_list: 
-param_var_decl {debug("param_list: param_var_decl");}
-| param_list MK_COMMA param_var_decl {debug("param_list: param_list, param_var_decl");}
-|
+param_list
+    : param_var_decl {
+        debug("param_list: param_var_decl");
+    }
+    | param_list MK_COMMA param_var_decl {  
+        debug("param_list: param_list, param_var_decl");
+    }
+    | /* empty */
 ; 
 
-param_var_decl : param_type param_id_list {
-                //Add id in $2 to symbol table with type and scope info
-                symtab_entry *handle = $<s>2;
-                handle->type = $<type_info>1;
-                if (!insert_symbol(handle, cur_scope)) {
-                    yyerror("variable %s is already declared", $2);
-                } else {
-                    symtab_entry *s = lookup_symtab(handle->name, cur_scope);
-                    debug("param_var_decl: symbol inserted. (name: %s, scope: %d, type: %d, kind: %d)", s->name, s->scope, s->type, s->kind);
-                }
-                $2->type = $1;
-                }
+param_var_decl : param_type param_id_list 
+{
+    //Add id in $2 to symbol table with type and scope info
+    symtab_entry *handle = $<s>2;
+    handle->type = $<type_info>1;
+    if (!insert_symbol(handle, cur_scope)) {
+        yyerror("variable %s is already declared", $2);
+    } else {
+        symtab_entry *s = lookup_symtab(handle->name, cur_scope);
+        debug("param_var_decl: symbol inserted. (name: %s, scope: %d, type: %d, kind: %d)", 
+            s->name, s->scope, s->type, s->kind);
+    }
+    $2->type = $1;
+}
 ;
 
 param_id_list: ID param_id_tail {$$=$1;} 
@@ -163,22 +169,22 @@ INT
 | FLOAT 
 | VOID 
 | STRUCT ID {
-  debug("parser::param_type STRUCT ID");
-  //TODO Check if ID has already been declared as a struct before in the type table
+debug("parser::param_type STRUCT ID");
+//TODO Check if ID has already been declared as a struct before in the type table
 }
 ;
 
 stmt    : block_stmt
-        | if_stmt
-        | while_stmt MK_SEMICOLON
-        | for_stmt
-        | assign_expr MK_SEMICOLON {debug("stmt: assign_expr");}
-        | write_stmt MK_SEMICOLON 
-        | write_lhs_stmt MK_SEMICOLON 
-        | return_stmt MK_SEMICOLON
-        | error { debug("Error in stmt production"); }
-        /* other C-- statements */
-        ;
+| if_stmt
+| while_stmt MK_SEMICOLON
+| for_stmt
+| assign_expr MK_SEMICOLON {debug("stmt: assign_expr");}
+| write_stmt MK_SEMICOLON 
+| write_lhs_stmt MK_SEMICOLON 
+| return_stmt MK_SEMICOLON
+| error { debug("Error in stmt production"); }
+/* other C-- statements */
+;
 
 block_stmt  : MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;}
 
@@ -195,46 +201,81 @@ write_lhs_stmt  : WRITE MK_LPAREN lhs MK_RPAREN {debug("stmt: write lhs called a
 return_stmt : RETURN expr {debug("stmt: return expr;");}
 
 else_tail   : ELSE stmt {debug("stmt: if(expr) { stmt } else { stmt}");} 
-            |
-            ;
+|
+;
 
 assign_expr : lhs OP_ASSIGN assign_expr_tail 
-            {
-                if (!match_type($<s>1, $<s>3)) {
-                    yyerror("type expression mismatch with =");
-                }
-                $$=$1;
-            }
-            ;
-
-assign_expr_tail    : expr  {debug("lhs=expr");$$=$1;}
-                    | READ MK_LPAREN MK_RPAREN {debug("lhs=read()");} 
-                    | FREAD MK_LPAREN MK_RPAREN {debug("lhs=fread()");}
-                    | function_call {debug("lhs=function_call");$$=$1;}
-                    ;
-
-function_call: ID MK_LPAREN call_param_list MK_RPAREN 
 {
-    symtab_entry *s = lookup_symtab($<s>1->name,0);
-    if (!s) { 
-        yyerror("ID undeclared");
-    } else {
-        $$ = s;//TODO maybe free the symtab_entry in $1 ?
+    if (!match_type($<s>1, $<s>3)) {
+        yyerror("type expression mismatch with =");
     }
+    $$=$1;
 }
 ;
 
-call_param_list : lhs call_param_list_tail
-                | ICONST call_param_list_tail
-                | FCONST call_param_list_tail
-                | /* empty */
-                ;
+assign_expr_tail    : expr  {debug("lhs=expr");$$=$1;}
+        | READ MK_LPAREN MK_RPAREN {debug("lhs=read()");} 
+        | FREAD MK_LPAREN MK_RPAREN {debug("lhs=fread()");}
+        | function_call {debug("lhs=function_call");$$=$1;}
+        ;
 
-call_param_list_tail    : MK_COMMA lhs call_param_list_tail
-                        | MK_COMMA ICONST call_param_list_tail
-                        | MK_COMMA FCONST call_param_list_tail
-                        | /* empty */
-                        ;
+function_call
+    : ID MK_LPAREN call_param_list MK_RPAREN 
+    {
+        debug("function_call : ID ( call_param_lilst )");
+        symtab_entry *s = lookup_symtab($<s>1->name,0);
+        if (!s) { 
+            yyerror("ID undeclared");
+        } else {
+            $$ = s;//TODO maybe free the symtab_entry in $1 ?
+        }
+        if ($3) {
+            /* check if the number of arguments matches */
+            int cnt = 1;
+            symtab_entry *handle = $<s>3;
+            while (handle->next) {
+                handle = handle->next;
+                cnt++;
+            }
+            debug("\tn_args: %d", cnt);
+            if (cnt > s->n_arg) {
+                yyerror("too many arguments to function (function)");
+            } else if (cnt < s->n_arg) {
+                yyerror("too few arguments to function (function)");
+            }
+        }
+    }
+;
+
+call_param_list 
+    : param call_param_list_tail
+    {
+        debug("call_param_list : param call_param_list_tail");
+        if ($2) {
+            $1->next = $2;
+        } else {
+            $1->next = NULL;
+        }
+        $$ = $1;
+    }
+    | /* empty */ {$$ = NULL;}
+    ;
+
+call_param_list_tail
+    : MK_COMMA param call_param_list_tail
+    {
+        debug("call_param_list_tail : , param call_param_list_tail");
+        if ($3) {
+            $2->next = $3;
+        } else {
+            $2->next = NULL;
+        }
+        $$ = $2;
+    }
+    | /* empty */ {$$ = NULL;}
+    ;
+
+param : lhs | ICONST | FCONST;
 
 lhs: ID expr_id_tail expr_member {
   symtab_entry *s = lookup_symtab_prevscope($<s>1->name,cur_scope);
