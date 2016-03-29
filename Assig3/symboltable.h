@@ -16,7 +16,7 @@ typedef struct symtab_entry{
     } kind;
     int dim;                    //< dimension
     struct symtab_entry* next;
-  void *type_ptr;//points to mytype_t object if at all
+    void *type_ptr;             //< points to mytype_t object if at all
 } symtab_entry;
 
 /** A global symbol table */
