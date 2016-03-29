@@ -12,7 +12,7 @@ struct test {
 int main(int b) {
     struct test test_1;
     float f;
-/*    int a[3][4];*/
+    int a[3][4];
     int c;
     test_1.t1=1;
     /*a=c+4.0;*/
