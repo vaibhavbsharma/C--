@@ -5,9 +5,24 @@
 #include "common.h"
 #include <stdlib.h>
 
-typedef struct mytype_t {
+//This structere used to create a linked list of field names and types
+// for structures and unions
+
+typedef struct struct_field_t {
+  type_enum f_type;
+  char f_name[20];
+  struct struct_field_t *next;
+} struct_field;
+
+struct_field *create_field(char *name, type_enum type);
+
+
+//Type information code below
+
+typedef struct mytype {
   char name[20];
   type_enum type;
+  struct_field *head;//points to the first field in a linked list of struct_field objects
 } mytype_t;
 
 entry_t **typetab;
@@ -22,5 +37,6 @@ int is_type_exists( char*);
 type_enum get_type(char *type); 
 
 void init_typetab();
+
 
 #endif

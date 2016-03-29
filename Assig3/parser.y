@@ -17,11 +17,13 @@ static int linenumber = 1;
   double const_float;
   char* str;
   type_enum type_info;
+  struct_field *sf;
 }
 
 %type <type_info> param_type type  
-%type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr 
+%type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr expr_member
 %type <s> param_var_decl param_id_list function_call
+%type <sf> struct_decl_list;
 
 %token <s> ID
 %token <s> ICONST
@@ -226,15 +228,34 @@ lhs: ID expr_id_tail expr_member {
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
 }
+| ID expr_id_tail {
+  symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
+  if(!s) s=lookup_symtab($<s>1->name,0);
+  if(!s) yyerror("ID undeclared");
+  else $$=s;//TODO maybe free the symtab_entry in $1 ?
+}
+| ID expr_member {
+  symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
+  if(!s) s=lookup_symtab($<s>1->name,0);
+  if(!s) yyerror("ID undeclared");
+  else $$=s;//TODO maybe free the symtab_entry in $1 ?
+  if(s->type != STRUCT_TY) {
+    yyerror("%s is not of type structure");
+  }
+}
+| ID {
+  symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
+  if(!s) s=lookup_symtab($<s>1->name,0);
+  if(!s) yyerror("ID undeclared");
+  else $$=s;//TODO maybe free the symtab_entry in $1 ?
+}
 ;
 
 expr_id_tail    : MK_LB ICONST MK_RB expr_id_tail
                 | MK_LB ID MK_RB expr_id_tail
-                |
                 ;
 
-expr_member : MK_DOT lhs
-            |
+expr_member : MK_DOT lhs {$$=$2;}
             ;
 
 
@@ -270,7 +291,7 @@ decl_list   : decl_list decl  {debug("parser::decl_list decl_list decl");}
 decl    : 
 type_decl MK_SEMICOLON {debug("parser::decl type_decl ;"); } 
 | var_decl  MK_SEMICOLON {debug("parser::decl var_decl ;"); }
-        ;
+;
 
 var_decl    : type id_list 
             {
@@ -286,7 +307,16 @@ var_decl    : type id_list
                     }
                 } while((handle = handle->next));
                 $2->type = $1;
+		$$=$2;
             }
+
+| STRUCT STRUCT_NAME id_list {
+  debug("parser::type STRUCT STRUCT_NAME");
+}
+| STRUCT struct_block id_list 
+{
+  debug("parser::type STRUCT struct_block");
+}
 ;
 
 id_list : ID id_tail
@@ -335,10 +365,6 @@ INT  {debug("parser::type INT");}
 | VOID {debug("parser::type VOID");} 
 | TYPEDEF_NAME {debug("parser::type TYPEDEF_NAME");$<type_info>$=TYPEDEF_TY;} 
 | struct_decl {debug("parser::type struct_decl"); $<type_info>$=STRUCT_TY; }
-| STRUCT STRUCT_NAME {
-  debug("parser::type STRUCT STRUCT_NAME");
-}
-| STRUCT struct_block {debug("parser::type STRUCT struct_block");}
 ;
 
 struct_or_null_block    : 
@@ -355,13 +381,26 @@ struct_decl     :
 STRUCT ID MK_LBRACE struct_decl_list MK_RBRACE {
   debug("parser::struct_decl STRUCT ID { struct_decl_list }");
   //TODO setup a type table entry as the semantic record for this ID and return it
-  insert_type($<s>2->name,STRUCT_TY); //maybe free $<s>3 here ?
+  mytype_t *tmp = insert_type($<s>2->name,STRUCT_TY); //maybe free $<s>3 here ?
+  tmp->head = $<sf>2;
 }
 ;
 
 struct_decl_list   : 
-struct_decl_list decl {debug("parser::struct_decl_list struct_decl_list decl");}
-| decl {debug("parser::struct_decl_list decl");} 
+struct_decl_list type_decl MK_SEMICOLON {debug("parser::struct_decl_list struct_decl_list type_decl");}
+| type_decl MK_SEMICOLON {debug("parser::struct_decl_list type_decl");} 
+| struct_decl_list var_decl MK_SEMICOLON {
+  debug("parser::struct_decl_list struct_decl_list var_decl");
+  //TODO: add this var_decl into the struct_decl_list
+  $<sf>1->next = create_field($<s>2->name, $<s>2->type);
+  $$=$1;
+}
+| var_decl MK_SEMICOLON {
+  debug("parser::struct_decl_list decl");
+  //TODO: set this var_decl into $$
+  struct_field *sf = create_field($1->name,$1->type);
+  $$=sf;
+} 
 ;
 
 type_decl       : 
