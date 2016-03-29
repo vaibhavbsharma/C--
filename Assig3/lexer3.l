@@ -104,8 +104,19 @@ error    .
     //debug("ID yytext: %s, yyval.s->name: %s", yytext, yylval.s->name);
 
     if (is_type_exists(yytext)) {
+        type_enum tmp_type = get_type(yytext);
+        //Try to set this type_info in the parser
+        //yylval.type_info = tmp_type;
         debug("lexer::ID\"%s\" is a user defined type", yytext);
-        return TYPEDEF_NAME;
+        if (tmp_type == TYPEDEF_TY) {
+          debug("lexer::ID\"%s\" is a typedef", yytext);
+          return TYPEDEF_NAME;
+        }
+        if (tmp_type == STRUCT_TY) {
+          debug("lexer::ID\"%s\" is a struct", yytext);
+          return STRUCT_NAME;
+        }
+        return ID;
     } else {
         return ID; 
     }

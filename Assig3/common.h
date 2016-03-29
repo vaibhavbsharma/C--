@@ -1,6 +1,11 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+typedef enum {
+  VOID_TY, INT_TY, FLOAT_TY, TYPEDEF_TY, STRUCT_TY, UNION_TY, 
+  ARR_INT_TY, ARR_FLOAT_TY
+} type_enum;
+
 #define DEBUG
 
 /** a pseudo-itoa that converts an integer to string 

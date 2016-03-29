@@ -8,7 +8,6 @@
 #include "typetable.h"
 #include "symboltable.h"
 static int linenumber = 1;
-/** a hash table */
  int cur_scope=0;
 %}
 
@@ -24,12 +23,12 @@ static int linenumber = 1;
 %type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr 
 %type <s> param_var_decl param_id_list function_call
 
-
 %token <s> ID
 %token <s> ICONST
 %token <s> FCONST
 %token SCONST
 %token <type_info> TYPEDEF_NAME
+%token <type_info> STRUCT_NAME
 %token <type_info> VOID
 %token <type_info> INT
 %token <type_info> FLOAT   
@@ -143,7 +142,14 @@ param_id_tail: MK_LB ICONST MK_RB param_id_tail
 |
 ;
 
-param_type: INT | FLOAT | VOID | STRUCT ID
+param_type: 
+INT 
+| FLOAT 
+| VOID 
+| STRUCT ID {
+  debug("parser::param_type STRUCT ID");
+  //TODO Check if ID has already been declared as a struct before in the type table
+}
 ;
 
 stmt    : block_stmt
@@ -261,8 +267,9 @@ decl_list   : decl_list decl  {debug("parser::decl_list decl_list decl");}
             |  {debug("parser::decl_list empty string");} 
             ;
 
-decl    : type_decl MK_SEMICOLON 
-        | var_decl  MK_SEMICOLON
+decl    : 
+type_decl MK_SEMICOLON {debug("parser::decl type_decl ;"); } 
+| var_decl  MK_SEMICOLON {debug("parser::decl var_decl ;"); }
         ;
 
 var_decl    : type id_list 
@@ -322,17 +329,16 @@ id_tail : MK_LB ICONST MK_RB id_tail
         }
         ;
 
-type    : INT  {debug("parser::type INT");}
-        | FLOAT {debug("parser::type FLOAT");} 
-        | VOID {debug("parser::type VOID");} 
-        | TYPEDEF_NAME {debug("parser::type TYPEDEF_NAME");} 
-        | STRUCT ID struct_or_null_block {debug("parser::type STRUCT ID struct_or_null_block");} 
-        | STRUCT struct_block {debug("parser::type STRUCT struct_block");}
-        ;
-
-struct_decl_list   : 
-struct_decl_list decl  {debug("parser::struct_decl_list struct_decl_list decl");}
-| decl {debug("parser::struct_decl_list decl");} 
+type    : 
+INT  {debug("parser::type INT");}
+| FLOAT {debug("parser::type FLOAT");} 
+| VOID {debug("parser::type VOID");} 
+| TYPEDEF_NAME {debug("parser::type TYPEDEF_NAME");$<type_info>$=TYPEDEF_TY;} 
+| struct_decl {debug("parser::type struct_decl"); $<type_info>$=STRUCT_TY; }
+| STRUCT STRUCT_NAME {
+  debug("parser::type STRUCT STRUCT_NAME");
+}
+| STRUCT struct_block {debug("parser::type STRUCT struct_block");}
 ;
 
 struct_or_null_block    : 
@@ -344,20 +350,30 @@ struct_block    :
 MK_LBRACE struct_decl_list MK_RBRACE {debug("parser::struct_block { struct_decl_list }");}
 ;
 
-type_decl       : struct_decl {debug("parser::type_decl struct_decl");} 
-                | typedef_decl {debug("parser::type_decl typedef_decl");}
-                ;
 
 struct_decl     : 
 STRUCT ID MK_LBRACE struct_decl_list MK_RBRACE {
   debug("parser::struct_decl STRUCT ID { struct_decl_list }");
+  //TODO setup a type table entry as the semantic record for this ID and return it
+  insert_type($<s>2->name,STRUCT_TY); //maybe free $<s>3 here ?
 }
 ;
+
+struct_decl_list   : 
+struct_decl_list decl {debug("parser::struct_decl_list struct_decl_list decl");}
+| decl {debug("parser::struct_decl_list decl");} 
+;
+
+type_decl       : 
+struct_decl {debug("parser::type_decl struct_decl"); } 
+| typedef_decl {debug("parser::type_decl typedef_decl"); }
+;
+
 
 typedef_decl    : TYPEDEF type ID 
                 { 
                     debug("parser::typedef_decl inserting %s", $3->name);
-                    insert_type($3->name); 
+                    insert_type($3->name,TYPEDEF_TY); 
                 }
                 ;
 

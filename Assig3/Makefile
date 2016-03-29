@@ -1,5 +1,5 @@
 TARGET = parser
-OBJECT = parser.tab.c parser.tab.o lex.yy.c hashtable.o typetable.o symboltable.o common.o
+OBJECT = parser.tab.c parser.tab.o lex.yy.c hashtable.o typetable.o symboltable.o common.o lex.yy.c
 CC = gcc -g
 LEX = flex
 YACC = bison -v
@@ -15,8 +15,8 @@ mac: parser.tab.o typetable.o symboltable.o common.o
 parser.tab.o: parser.tab.c lex.yy.c
 	$(CC) -c parser.tab.c
 
-typetable.o: typetable.c hashtable.o
-	$(CC) -c typetable.c hashtable.c
+typetable.o: typetable.c hashtable.o common.o
+	$(CC) -c -o typetable.o typetable.c 
 
 hashtable.o: hashtable.c
 	$(CC) -c -o hashtable.o hashtable.c

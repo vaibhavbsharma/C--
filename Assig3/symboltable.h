@@ -6,11 +6,6 @@
 #include <assert.h>
 #include "common.h"
 
-typedef enum {
-  VOID_TY, INT_TY, FLOAT_TY, TYPEDEF_TY, STRUCT_TY, UNION_TY, 
-  ARR_INT_TY, ARR_FLOAT_TY
-} type_enum;
-
 typedef struct symtab_entry{
     char name[ID_SIZ];
     int scope;
