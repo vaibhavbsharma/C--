@@ -7,7 +7,7 @@ mytype_t *insert_type(char *type, type_enum _t) {
     t->type = _t;
     t->head = NULL;
     h_insert(typetab, type, t);
-    printf("typetable.c::insert_type %s(%d) inserted succesfully\n",type,_t);
+    printf("insert_type %s(%d) inserted succesfully\n",type,_t);
     return t;
 }
 
@@ -22,11 +22,11 @@ int is_type_exists(char *type) {
 type_enum get_type(char *type) {
   mytype_t *t = (mytype_t *)h_get(typetab,type);
   if (t!=NULL) {
-    printf("typetable.c::get_type %s has type (%d)\n",type,t->type);
+    printf("get_type %s has type (%d)\n",type,t->type);
     return t->type;
   }
   else {
-    printf("typetable.c::get_type %s returning default type\n", type);
+    printf("get_type %s returning default type\n", type);
     return INT_TY;
   }
 }
@@ -42,11 +42,17 @@ struct_field *create_field(char *name, type_enum type) {
   strcpy(sf->f_name,name);
   sf->f_type=type;
   sf->next=NULL;
-  debug("typetable.c::create_field field %s(%d) created\n",name,type);
+  debug("create_field field %s(%d) created\n",name,type);
   return sf;
 }
 
 mytype_t *get_type_obj(char *type ){
+  debug("get_type_obj getting type object for type %s",type);
   mytype_t *t = (mytype_t *)h_get(typetab,type);
+  struct_field *sf = t->head;
+  while(sf != NULL) {
+    debug("get_type_obj found field %s(%d) in type %s",sf->f_name, sf->f_type,type);
+    sf = sf->next;
+  }
   return t;
 }

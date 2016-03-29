@@ -249,7 +249,11 @@ lhs: ID expr_id_tail expr_member {
     struct_field *sf=type_obj->head;
     int found=0;
     while(sf != NULL) {
-      if(strcmp(sf->f_name,$<s>2->name)==0) found=1;
+      if(strcmp(sf->f_name,$<s>2->name)==0) {
+	found=1;
+	$$=s;
+	$<s>$->type=sf->f_type;
+      }
       debug("field %s(%d)",sf->f_name,sf->f_type);
       sf = sf -> next; 
     }
@@ -260,7 +264,7 @@ lhs: ID expr_id_tail expr_member {
 | ID {
   symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
   if(!s) s=lookup_symtab($<s>1->name,0);
-  if(!s) yyerror("ID undeclared");
+  if(!s) yyerror("lhs: ID ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
 }
 ;
@@ -425,7 +429,7 @@ struct_decl     :
 STRUCT ID MK_LBRACE struct_decl_list MK_RBRACE {
   debug("parser::struct_decl STRUCT ID { struct_decl_list }");
   mytype_t *tmp = insert_type($<s>2->name,STRUCT_TY); //maybe free $<s>3 here ?
-  tmp->head = $<sf>2;
+  tmp->head = $<sf>4;
   $$=tmp;
 }
 ;
@@ -449,7 +453,8 @@ struct_decl_list type_decl MK_SEMICOLON {debug("parser::struct_decl_list struct_
 | struct_var_decl MK_SEMICOLON {
   debug("parser::struct_decl_list struct_var_decl");
   struct_field *sf = create_field($<s>1->name, $<s>1->type);
-  struct_field *ret = sf;
+  struct_field *ret;
+  ret=sf;
   symtab_entry *s = $<s>1->next;
   while(s != NULL) {
     struct_field *sf_new = create_field(s->name, s->type);
