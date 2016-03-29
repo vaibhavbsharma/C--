@@ -42,5 +42,11 @@ struct_field *create_field(char *name, type_enum type) {
   strcpy(sf->f_name,name);
   sf->f_type=type;
   sf->next=NULL;
+  debug("typetable.c::create_field field %s(%d) created\n",name,type);
   return sf;
+}
+
+mytype_t *get_type_obj(char *type ){
+  mytype_t *t = (mytype_t *)h_get(typetab,type);
+  return t;
 }

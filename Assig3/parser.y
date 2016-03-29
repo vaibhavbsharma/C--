@@ -18,19 +18,21 @@ static int linenumber = 1;
   char* str;
   type_enum type_info;
   struct_field *sf;
+  mytype_t *type_obj;
 }
 
 %type <type_info> param_type type  
-%type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr expr_member
+%type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr expr_member struct_var_decl
 %type <s> param_var_decl param_id_list function_call
-%type <sf> struct_decl_list;
+%type <sf> struct_decl_list 
+%type <type_obj> struct_decl;
 
 %token <s> ID
 %token <s> ICONST
 %token <s> FCONST
 %token SCONST
 %token <type_info> TYPEDEF_NAME
-%token <type_info> STRUCT_NAME
+%token <str> STRUCT_NAME
 %token <type_info> VOID
 %token <type_info> INT
 %token <type_info> FLOAT   
@@ -242,6 +244,18 @@ lhs: ID expr_id_tail expr_member {
   if(s->type != STRUCT_TY) {
     yyerror("%s is not of type structure");
   }
+  if(s->type_ptr != NULL) {
+    mytype_t *type_obj = (mytype_t *)s->type_ptr;
+    struct_field *sf=type_obj->head;
+    int found=0;
+    while(sf != NULL) {
+      if(strcmp(sf->f_name,$<s>2->name)==0) found=1;
+      debug("field %s(%d)",sf->f_name,sf->f_type);
+      sf = sf -> next; 
+    }
+    if(found == 0) 
+      yyerror("%s has no member named %s",type_obj->name,$<s>2->name);
+  }
 }
 | ID {
   symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
@@ -303,7 +317,7 @@ var_decl    : type id_list
                         yyerror("variable %s is already declared", $2);
                     } else {
                         symtab_entry *s = lookup_symtab(handle->name, cur_scope);
-                        debug("var_decl: symbol inserted. (name: %s, scope: %d, type: %d, kind: %d)", s->name, s->scope, s->type, s->kind);
+                        debug("var_decl: type id_list symbol inserted. (name: %s, scope: %d, type: %d, kind: %d)", s->name, s->scope, s->type, s->kind);
                     }
                 } while((handle = handle->next));
                 $2->type = $1;
@@ -311,11 +325,42 @@ var_decl    : type id_list
             }
 
 | STRUCT STRUCT_NAME id_list {
-  debug("parser::type STRUCT STRUCT_NAME");
+  debug("parser::var_decl STRUCT STRUCT_NAME %s",$<str>2);
+  mytype_t *struct_type_obj = get_type_obj($<str>2);
+  //Add id in $2 to symbol table with type and scope info
+  symtab_entry *handle = $<s>3;
+  do {
+    handle->type = STRUCT_TY;
+    handle->type_ptr = (void*) struct_type_obj;
+    if (!insert_symbol(handle, cur_scope)) {
+      yyerror("variable %s is already declared", handle->name);
+    } else {
+      symtab_entry *s = lookup_symtab(handle->name, cur_scope);
+      debug("var_decl: STRUCT STRUCT_NAME id_list symbol inserted. (name: %s, scope: %d, type: %d, kind: %d)", s->name, s->scope, s->type, s->kind);
+    }
+  } while((handle = handle->next));
+  $3->type = STRUCT_TY;
+  $$=$3;
 }
-| STRUCT struct_block id_list 
-{
+| STRUCT struct_block id_list {
   debug("parser::type STRUCT struct_block");
+}
+| struct_decl id_list {
+  debug("parser::type struct_decl"); $<type_info>$=STRUCT_TY; 
+  //Add id in $2 to symbol table with type and scope info
+  symtab_entry *handle = $2;
+  do {
+    handle->type = STRUCT_TY;
+    handle->type_ptr = (void*) $<type_obj>1;
+    if (!insert_symbol(handle, cur_scope)) {
+      yyerror("variable %s is already declared", $2);
+    } else {
+      symtab_entry *s = lookup_symtab(handle->name, cur_scope);
+      debug("var_decl: struct_decl id_list symbol inserted. (name: %s, scope: %d, type: %d, kind: %d)", s->name, s->scope, s->type, s->kind);
+    }
+  } while((handle = handle->next));
+  $2->type = STRUCT_TY;
+  $$=$2;
 }
 ;
 
@@ -364,7 +409,6 @@ INT  {debug("parser::type INT");}
 | FLOAT {debug("parser::type FLOAT");} 
 | VOID {debug("parser::type VOID");} 
 | TYPEDEF_NAME {debug("parser::type TYPEDEF_NAME");$<type_info>$=TYPEDEF_TY;} 
-| struct_decl {debug("parser::type struct_decl"); $<type_info>$=STRUCT_TY; }
 ;
 
 struct_or_null_block    : 
@@ -380,26 +424,40 @@ MK_LBRACE struct_decl_list MK_RBRACE {debug("parser::struct_block { struct_decl_
 struct_decl     : 
 STRUCT ID MK_LBRACE struct_decl_list MK_RBRACE {
   debug("parser::struct_decl STRUCT ID { struct_decl_list }");
-  //TODO setup a type table entry as the semantic record for this ID and return it
   mytype_t *tmp = insert_type($<s>2->name,STRUCT_TY); //maybe free $<s>3 here ?
   tmp->head = $<sf>2;
+  $$=tmp;
 }
 ;
 
 struct_decl_list   : 
 struct_decl_list type_decl MK_SEMICOLON {debug("parser::struct_decl_list struct_decl_list type_decl");}
 | type_decl MK_SEMICOLON {debug("parser::struct_decl_list type_decl");} 
-| struct_decl_list var_decl MK_SEMICOLON {
-  debug("parser::struct_decl_list struct_decl_list var_decl");
-  //TODO: add this var_decl into the struct_decl_list
-  $<sf>1->next = create_field($<s>2->name, $<s>2->type);
+| struct_decl_list struct_var_decl MK_SEMICOLON {
+  debug("parser::struct_decl_list struct_decl_list struct_var_decl");
+  struct_field *sf = create_field($<s>2->name, $<s>2->type);
+  $<sf>1->next = sf; 
+  symtab_entry *s = $<s>2->next;
+  while(s != NULL) {
+    struct_field *sf_new = create_field(s->name, s->type);
+    sf->next = sf_new;
+    sf = sf_new;
+    s = s -> next;
+  }  
   $$=$1;
 }
-| var_decl MK_SEMICOLON {
-  debug("parser::struct_decl_list decl");
-  //TODO: set this var_decl into $$
-  struct_field *sf = create_field($1->name,$1->type);
-  $$=sf;
+| struct_var_decl MK_SEMICOLON {
+  debug("parser::struct_decl_list struct_var_decl");
+  struct_field *sf = create_field($<s>1->name, $<s>1->type);
+  struct_field *ret = sf;
+  symtab_entry *s = $<s>1->next;
+  while(s != NULL) {
+    struct_field *sf_new = create_field(s->name, s->type);
+    sf->next = sf_new;
+    sf = sf_new;
+    s = s -> next;
+  }
+  $$=ret;
 } 
 ;
 
@@ -415,6 +473,54 @@ typedef_decl    : TYPEDEF type ID
                     insert_type($3->name,TYPEDEF_TY); 
                 }
                 ;
+
+struct_var_decl    : type id_list 
+            {
+                //Add id in $2 to symbol table with type and scope info
+                symtab_entry *handle = $2;
+                do {
+		  handle->type = $<type_info>1;
+                  debug("struct_var_decl setting type %s(%d)",handle->name, handle->type);  
+                } while((handle = handle->next));
+                $2->type = $1;
+		$$=$2;
+            }
+
+| STRUCT STRUCT_NAME id_list {
+  debug("parser::type STRUCT STRUCT_NAME %s",$<str>2);
+  mytype_t *struct_type_obj = get_type_obj($<str>2);
+  //Add id in $2 to symbol table with type and scope info
+  symtab_entry *handle = $<s>3;
+  do {
+    handle->type = STRUCT_TY;
+    handle->type_ptr = (void*) struct_type_obj;
+  } while((handle = handle->next));
+  $3->type = STRUCT_TY;
+  $$=$3;
+}
+| STRUCT struct_block id_list {
+  debug("parser::type STRUCT struct_block");
+}
+| struct_decl id_list {
+  debug("parser::type struct_decl"); $<type_info>$=STRUCT_TY; 
+  //Add id in $2 to symbol table with type and scope info
+  symtab_entry *handle = $2;
+  do {
+    handle->type = STRUCT_TY;
+    handle->type_ptr = (void*) $<type_obj>1;
+  } while((handle = handle->next));
+  $2->type = STRUCT_TY;
+  $$=$2;
+}
+;
+
+
+
+
+
+
+
+
 
 %%
 

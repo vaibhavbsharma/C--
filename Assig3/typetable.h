@@ -36,6 +36,8 @@ int is_type_exists( char*);
 //found in the type table
 type_enum get_type(char *type); 
 
+mytype_t *get_type_obj(char *);
+
 void init_typetab();
 
 

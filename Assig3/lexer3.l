@@ -113,6 +113,7 @@ error    .
           return TYPEDEF_NAME;
         }
         if (tmp_type == STRUCT_TY) {
+          strcpy(yylval.str,yytext);
           debug("lexer::ID\"%s\" is a struct", yytext);
           return STRUCT_NAME;
         }
