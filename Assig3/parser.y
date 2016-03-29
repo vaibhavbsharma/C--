@@ -214,8 +214,13 @@ call_param_list_tail    : MK_COMMA lhs call_param_list_tail
                         |
                         ;
 
-lhs : ID expr_id_tail expr_member {$$=$1;}
-    ;
+lhs: ID expr_id_tail expr_member {
+  symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
+  if(!s) s=lookup_symtab($<s>1->name,0);
+  if(!s) yyerror("ID undeclared");
+  else $$=s;//TODO maybe free the symtab_entry in $1 ?
+}
+;
 
 expr_id_tail    : MK_LB ICONST MK_RB expr_id_tail
                 | MK_LB ID MK_RB expr_id_tail
@@ -279,20 +284,20 @@ var_decl    : type id_list
 
 id_list : ID id_tail
         {
-            if ($2->dim > 0) {
+	  /*if ($2 && $2->dim > 0) {
                 $1->kind = ARRAY;
                 $$->dim= $2->dim;
                 debug("id_list: ID %s is %d-dim array", $1->name, $1->dim);
-            }
+		}*/
             $$ = $1;
         }
         | id_list MK_COMMA ID id_tail 
         {
-            if ($4->dim > 0) {
+	  /*if ($4->dim > 0) {
                 $3->kind = ARRAY;
                 $3->dim= $4->dim;
                 debug("id_list: ID %s is %d-dim array", $3->name, $3->dim);
-            }
+		}*/
             // append at the end of the list ($1)
             symtab_entry *handle = $<s>1;
             while (handle->next) {
@@ -306,21 +311,22 @@ id_list : ID id_tail
 
 id_tail : MK_LB ICONST MK_RB id_tail 
         {   
-            $<s>$->dim= $<s>4->dim+ 1;
+	  //$<s>$->dim= $<s>4->dim+ 1;
         }
         | OP_ASSIGN ICONST 
         | OP_ASSIGN FCONST
         | { // nullable, no dimension
-            $<s>$->dim = 0; 
+	  //if($<s>$ != NULL) 
+	  //  $<s>$->dim = 0; 
         }
         ;
 
-type    : INT 
-        | FLOAT 
-        | VOID 
-        | TYPEDEF_NAME 
-        | STRUCT ID struct_or_null_block 
-        | STRUCT struct_block
+type    : INT  {debug("parser::type INT");}
+        | FLOAT {debug("parser::type FLOAT");} 
+        | VOID {debug("parser::type VOID");} 
+        | TYPEDEF_NAME {debug("parser::type TYPEDEF_NAME");} 
+        | STRUCT ID struct_or_null_block {debug("parser::type STRUCT ID struct_or_null_block");} 
+        | STRUCT struct_block {debug("parser::type STRUCT struct_block");}
         ;
 
 struct_or_null_block    : MK_LBRACE decl_list MK_RBRACE

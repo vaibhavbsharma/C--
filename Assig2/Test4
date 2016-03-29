@@ -28,7 +28,7 @@ int main()
 	if ( someRealnumber12345 > 1200.5) 
 	{
                 write("Too big");
-        };
+        }
 	if ( someRealnumber12345 <= 120.05) 
 	{
 		write("It is small");
@@ -38,7 +38,7 @@ int main()
 		int a,b,c;
 		struct x {
 			int a,a1,a2;
-			double b;
+			float b;
 			int a3[10][10];
 		} y1, y2[10];
 		if (a == 1 || a < 0 || a < b) 
@@ -65,7 +65,7 @@ int main()
 					{
 						a = -a;
 					}
-					else    a == 1;
+					else    a = 1;
 				}
 			}
 		} 

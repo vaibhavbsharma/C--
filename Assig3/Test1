@@ -28,11 +28,11 @@ union {
 		int type;
 		} n;
 	struct {
-	        int type;
+	        int type1;
 	        int intnode;
-               } n1;
+               } n11;
 	struct {
-	        int type;
+	        int type2;
 	        float fnode;
                } nf;
 	       } united;
@@ -41,7 +41,7 @@ int Matrix_Multiplication_Function (int V1[][10], int V2[][10])
 {
  int i,j,k;
  int result[10][10];          /*multi-dimensional array declaration */
-
+   
    for (i = 0; i < 10; i = i + 1) 
    {
       for(j = 0; j < 10; j = j + 1) 
