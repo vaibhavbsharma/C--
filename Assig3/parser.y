@@ -256,9 +256,9 @@ binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE |
 unop: OP_NOT | OP_MINUS
 ;
 
-decl_list   : decl_list decl  {}
-            | decl 
-            |
+decl_list   : decl_list decl  {debug("parser::decl_list decl_list decl");}
+            | decl {debug("parser::decl_list decl");} 
+            |  {debug("parser::decl_list empty string");} 
             ;
 
 decl    : type_decl MK_SEMICOLON 
@@ -284,6 +284,7 @@ var_decl    : type id_list
 
 id_list : ID id_tail
         {
+	  debug("parser::id_list ID id_tail");
 	  /*if ($2 && $2->dim > 0) {
                 $1->kind = ARRAY;
                 $$->dim= $2->dim;
@@ -293,6 +294,7 @@ id_list : ID id_tail
         }
         | id_list MK_COMMA ID id_tail 
         {
+	  debug("parser::id_list id_list , ID id_tail");
 	  /*if ($4->dim > 0) {
                 $3->kind = ARRAY;
                 $3->dim= $4->dim;
@@ -306,7 +308,6 @@ id_list : ID id_tail
             handle->next = $3;
             $$ = $1;
         }
-        |
         ;
 
 id_tail : MK_LB ICONST MK_RB id_tail 
@@ -329,18 +330,24 @@ type    : INT  {debug("parser::type INT");}
         | STRUCT struct_block {debug("parser::type STRUCT struct_block");}
         ;
 
-struct_or_null_block    : MK_LBRACE decl_list MK_RBRACE
-                        |
-                        ;
+struct_or_null_block    : 
+MK_LBRACE decl_list MK_RBRACE {debug("parser::struct_or_null_block { decl_list }");}
+| {debug("parser::struct_or_null_block empty string");}
+;
 
-struct_block    : MK_LBRACE decl_list MK_RBRACE
+struct_block    : 
+MK_LBRACE decl_list MK_RBRACE {debug("parser::struct_block { decl_list }");}
+;
+
+type_decl       : struct_decl {debug("parser::type_decl struct_decl");} 
+                | typedef_decl {debug("parser::type_decl typedef_decl");}
                 ;
 
-type_decl       : struct_decl 
-                | typedef_decl
-                ;
-
-struct_decl     : STRUCT ID MK_LBRACE decl_list MK_RBRACE;
+struct_decl     : 
+STRUCT ID MK_LBRACE decl_list MK_RBRACE {
+  debug("parser::struct_decl STRUCT ID { decl_list }");
+}
+;
 
 typedef_decl    : TYPEDEF type ID 
                 { 

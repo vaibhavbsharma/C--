@@ -47,11 +47,11 @@ symtab_entry *create_symbol(char *id_name, int scope) {
 }
 
 void delete_scope(int scope) {
-    int sz;
+  int sz,i;
     // hasth table entries in a list, for a faster search
     debug("symboltable::delete_scope(%d)", scope);
     void **list = ht_to_list(symtab,&sz);
-    for (int i=0; i<sz; i++) {
+    for (i=0; i<sz; i++) {
         symtab_entry *entry = (symtab_entry *) list[i];
         if (entry->scope >= scope) {
             h_remove(symtab, gen_key(entry->name, scope));
