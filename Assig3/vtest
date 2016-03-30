@@ -16,6 +16,11 @@ float imag;
 }; 
 struct complex2 x2, y2; 
 
+struct S { 
+int a; 
+struct S next; /* This is illegal in C-- */ 
+}; 
+
 
 int main(int b) {
 struct test t1;

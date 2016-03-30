@@ -543,6 +543,7 @@ struct_var_decl    : type id_list
   $2->type = STRUCT_TY;
   $$=$2;
 }
+| STRUCT ID ID {debug("field(%s) undeclared",$<s>3->name);yyerror("field undeclared");}
 ;
 
 
