@@ -287,6 +287,9 @@ expr    : lhs {}
     //TODO: get these %s's to work
     //yyerror("%s and %s type expression mismatch",$1,$3);
   }
+  if($1 -> type == STRUCT_TY || $3 -> type == STRUCT_TY) {
+    yyerror("Invalid operands to binary operator");
+  }
   $$=$1;
 }
         | unop expr {$$=$2;}
