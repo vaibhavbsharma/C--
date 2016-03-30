@@ -308,7 +308,7 @@ call_param_list_tail
 
 param : lhs | ICONST | FCONST;
 
-lhs: ID expr_id_tail expr_member {
+lhs: ID expr_id_tail MK_DOT ID {
   symtab_entry *s = lookup_symtab_prevscope($<s>1->name,cur_scope);
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
@@ -318,7 +318,7 @@ lhs: ID expr_id_tail expr_member {
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
 }
-| ID expr_member {
+| ID MK_DOT ID {
   symtab_entry *s = lookup_symtab_prevscope($<s>1->name,cur_scope);
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
@@ -330,7 +330,7 @@ lhs: ID expr_id_tail expr_member {
     struct_field *sf=type_obj->head;
     int found=0;
     while(sf != NULL) {
-      if(strcmp(sf->f_name,$<s>2->name)==0) {
+      if(strcmp(sf->f_name,$<s>3->name)==0) {
 	found=1;
 	$$=s;
 	$<s>$->type=sf->f_type;
@@ -338,8 +338,10 @@ lhs: ID expr_id_tail expr_member {
       debug("field %s(%d)",sf->f_name,sf->f_type);
       sf = sf -> next; 
     }
-    if(found == 0) 
-      yyerror("%s has no member named %s",type_obj->name,$<s>2->name);
+    if(found == 0) { 
+      debug("Structure %s has no member named %s",type_obj->name,$<s>3->name);
+      yyerror("missing member in structure");
+    }
   }
 }
 | ID {
@@ -354,8 +356,6 @@ expr_id_tail    : MK_LB ICONST MK_RB expr_id_tail
                 | MK_LB ID MK_RB expr_id_tail
                 ;
 
-expr_member : MK_DOT lhs {$$=$2;}
-            ;
 
 
 expr    : lhs {}
@@ -524,9 +524,11 @@ struct_decl_list   :
 struct_decl_list type_decl MK_SEMICOLON {debug("parser::struct_decl_list struct_decl_list type_decl");}
 | type_decl MK_SEMICOLON {debug("parser::struct_decl_list type_decl");} 
 | struct_decl_list struct_var_decl MK_SEMICOLON {
-  debug("parser::struct_decl_list struct_decl_list struct_var_decl");
+  debug("parser::struct_decl_list struct_decl_list struct_var_decl ;");
+  struct_field *head = $<sf>1;
+  while(head->next != NULL) head = head->next;
   struct_field *sf = create_field($<s>2->name, $<s>2->type);
-  $<sf>1->next = sf; 
+  head->next = sf; 
   symtab_entry *s = $<s>2->next;
   while(s != NULL) {
     struct_field *sf_new = create_field(s->name, s->type);
@@ -537,7 +539,7 @@ struct_decl_list type_decl MK_SEMICOLON {debug("parser::struct_decl_list struct_
   $$=$1;
 }
 | struct_var_decl MK_SEMICOLON {
-  debug("parser::struct_decl_list struct_var_decl");
+  debug("parser::struct_decl_list struct_var_decl ;");
   struct_field *sf = create_field($<s>1->name, $<s>1->type);
   struct_field *ret;
   ret=sf;
@@ -549,6 +551,11 @@ struct_decl_list type_decl MK_SEMICOLON {debug("parser::struct_decl_list struct_
     s = s -> next;
   }
   $$=ret;
+  struct_field *sf_t = $$;
+  while(sf_t != NULL){
+    debug("struct_decl_list: struct_var_decl ; %s(%d)",sf_t->f_name, sf_t->f_type);
+    sf_t = sf_t -> next;
+  }
 } 
 ;
 
