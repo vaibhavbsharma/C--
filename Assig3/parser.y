@@ -23,6 +23,8 @@ bool match_type(symtab_entry *s1, symtab_entry *s2) {
         }
     }
 }
+
+symtab_entry *current_function; // current function symbol
 %}
 
 %union {
@@ -38,7 +40,7 @@ bool match_type(symtab_entry *s1, symtab_entry *s2) {
 %type <type_info> param_type type  
 %type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr expr_member struct_var_decl
 %type <s> param_id function_call param call_param_list call_param_list_tail
-%type <s> param_var_decl param_list param_list_tail array_subscript
+%type <s> param_var_decl param_list param_list_tail array_subscript subscript_expr
 %type <sf> struct_decl_list 
 %type <type_obj> struct_decl;
 
@@ -112,21 +114,26 @@ global_decl : decl_list function_decl  {
 | function_decl
 ;
 
-function_decl : type ID MK_LPAREN{debug("scope++"); cur_scope++;} param_list MK_RPAREN MK_LBRACE block MK_RBRACE {
-    $2->type = $<type_info>1;
-    $2->kind = FUNCTION;
-    // count the number of parameters
-    int n_param = 0;
-    if ($5) {
-        //Q: I don't know why the `param_list` is $5 instead of $4.
-        symtab_entry *handle = $<s>5;
-        do {
-            debug("\thandle: %s", handle);
-            handle = handle->next;
-            n_param ++;
-        } while (handle);
-    }
-    $2->n_param = n_param;
+function_decl 
+    : type ID MK_LPAREN {
+        debug("scope++"); 
+        cur_scope++; 
+        $2->type = $<type_info>1;
+        $2->kind = FUNCTION;
+        current_function = $<s>2;
+    } param_list MK_RPAREN MK_LBRACE block MK_RBRACE {
+        // count the number of parameters
+        int n_param = 0;
+        if ($5) {
+            //Q: I don't know why the `param_list` is $5 instead of $4.
+            symtab_entry *handle = $<s>5;
+            do {
+                debug("\thandle: %s", handle);
+                handle = handle->next;
+                n_param ++;
+            } while (handle);
+        }
+        $2->n_param = n_param;
 
     // warning: order matters! do not delete scope earlier or later.
     delete_scope(cur_scope--);
@@ -139,7 +146,7 @@ function_decl : type ID MK_LPAREN{debug("scope++"); cur_scope++;} param_list MK_
         debug("\t(name: %s, scope: %d, type: %d, kind: %d, n_param: %d)", 
                 s->name, s->scope, s->type, s->kind, s->n_param);
     }
-}
+ }
 ;
 
 block: decl_list stmt_list  {debug("parser::block decl_list stmt_list");}
@@ -187,6 +194,7 @@ param_var_decl : param_type ID array_subscript
 }
 ;
 
+
 array_subscript 
     : MK_LB subscript_expr MK_RB array_subscript
     {
@@ -196,13 +204,17 @@ array_subscript
         } else {
             $<s>$->dim = 1;
         }
+        // check if the subscript is of integer type
+        if ($2->type != INT_TY) {
+            yyerror("Array subscript is not an integer");
+        }
     }
     | /* empty */ {
         $$ = NULL; 
     }
 ;
 
-subscript_expr : ID | ICONST | expr | /* empty */;
+subscript_expr : ID | ICONST | FCONST | expr | /* empty */;
 
 param_type: 
 INT 
@@ -238,7 +250,19 @@ write_stmt  : WRITE MK_LPAREN SCONST MK_RPAREN {debug("stmt: write string consta
 
 write_lhs_stmt  : WRITE MK_LPAREN lhs MK_RPAREN {debug("stmt: write lhs called at %d", linenumber);}
 
-return_stmt : RETURN expr {debug("stmt: return expr;");}
+return_stmt 
+    : RETURN expr {
+        if (!current_function) {
+            yyerror("Misplaced return statement");
+        }
+        debug("stmt: return expr;");
+        if ($2->type != current_function->type) {
+            debug("type of current function %s: %d, return type: %d",
+                    current_function->name, current_function->type, $2->type);
+            yyerror("Incompatible return type.");
+        }
+        $<s>$ = $2;
+    }
 
 else_tail   : ELSE stmt {debug("stmt: if(expr) { stmt } else { stmt}");} 
 |
