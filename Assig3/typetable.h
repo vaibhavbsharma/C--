@@ -10,7 +10,7 @@
 
 typedef struct struct_field_t {
   type_enum f_type;
-  char f_name[20];
+  char f_name[ID_SIZ];
   struct struct_field_t *next;
 } struct_field;
 
@@ -20,7 +20,7 @@ struct_field *create_field(char *name, type_enum type);
 //Type information code below
 
 typedef struct mytype {
-  char name[20];
+  char name[ID_SIZ];
   type_enum type;
   struct_field *head;//points to the first field in a linked list of struct_field objects
 } mytype_t;

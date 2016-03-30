@@ -38,7 +38,7 @@ bool match_type(symtab_entry *s1, symtab_entry *s2) {
 %type <type_info> param_type type  
 %type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr expr_member struct_var_decl
 %type <s> param_id function_call param call_param_list call_param_list_tail
-%type <s> param_var_decl param_list param_list_tail
+%type <s> param_var_decl param_list param_list_tail array_subscript
 %type <sf> struct_decl_list 
 %type <type_obj> struct_decl;
 
@@ -172,7 +172,7 @@ param_list_tail
     }
 ;
 
-param_var_decl : param_type param_id
+param_var_decl : param_type ID array_subscript
 {
     //Add id in $2 to symbol table with type and scope info
     $2->type = $<type_info>1;
@@ -187,13 +187,22 @@ param_var_decl : param_type param_id
 }
 ;
 
-param_id: ID param_id_tail {$$=$1;} 
+array_subscript 
+    : MK_LB subscript_expr MK_RB array_subscript
+    {
+        debug("array_subscript: [ subscript_expr ] array_subscript");
+        if ($4) {
+            $<s>$->dim = $<s>4->dim + 1;
+        } else {
+            $<s>$->dim = 1;
+        }
+    }
+    | /* empty */ {
+        $$ = NULL; 
+    }
 ;
 
-param_id_tail: MK_LB ICONST MK_RB param_id_tail
-| MK_LB MK_RB param_id_tail
-|
-;
+subscript_expr : ID | ICONST | expr | /* empty */;
 
 param_type: 
 INT 
@@ -312,12 +321,12 @@ call_param_list_tail
 
 param : lhs | ICONST | FCONST;
 
-lhs: ID expr_id_tail MK_DOT ID {
+lhs: ID array_subscript MK_DOT ID {
   symtab_entry *s = lookup_symtab_prevscope($<s>1->name,cur_scope);
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
 }
-| ID expr_id_tail {
+| ID array_subscript{
   symtab_entry *s = lookup_symtab_prevscope($<s>1->name,cur_scope);
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
@@ -356,12 +365,6 @@ lhs: ID expr_id_tail MK_DOT ID {
 }
 ;
 
-expr_id_tail    : MK_LB ICONST MK_RB expr_id_tail
-                | MK_LB ID MK_RB expr_id_tail
-                ;
-
-
-
 expr    : lhs {}
         | MK_LPAREN expr MK_RPAREN {}
         | expr binop expr 
@@ -380,7 +383,7 @@ expr    : lhs {}
         | unop expr {$$=$2;}
         | ICONST {$$=$1;}
         | FCONST {$$=$1;}
-        ;
+;
 
 binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE | 
        OP_PLUS | OP_MINUS | OP_TIMES | OP_DIVIDE
@@ -456,50 +459,40 @@ var_decl    : type id_list
 }
 ;
 
-id_list : ID id_tail
-        {
-            debug("parser::id_list ID id_tail");
-            if ($2) {
-                $<s>1->kind = ARRAY;
-                $<s>1->dim = $2->dim;
-                debug("parser::id_list: %s is a %d-dim array", $1->name, $1->dim);
-            }
-            $$ = $1;
+id_list 
+    : ID array_subscript id_tail {
+        debug("parser::id_list ID id_tail");
+        if ($2) {
+            $<s>1->kind = ARRAY;
+            $<s>1->dim = $2->dim;
+            debug("parser::id_list: %s is a %d-dim array", $1->name, $1->dim);
         }
-        | id_list MK_COMMA ID id_tail 
-        {
-            debug("parser::id_list id_list, ID id_tail");
-            if ($4) {
-                    $3->kind = ARRAY;
-                    $3->dim = $4->dim;
-                    debug("id_list: %s is a %d-dim array", $3->name, $3->dim);
-            }
-            // append at the end of the list ($1)
-            symtab_entry *handle = $<s>1;
-            while (handle->next) {
-                handle = handle->next;
-            } 
-            handle->next = $3;
-            $$ = $1;
+        $$ = $1;
+    }
+    | id_list MK_COMMA ID array_subscript id_tail {
+        debug("id_list: id_list, ID array_subscript id_tail");
+        if ($4) {
+            $3->kind = ARRAY;
+            $3->dim = $4->dim;
+            debug("id_list: %s is a %d-dim array", $3->name, $3->dim);
         }
-        ;
+        // append at the end of the list ($1)
+        symtab_entry *handle = $<s>1;
+        while (handle->next) {
+            handle = handle->next;
+        } 
+        handle->next = $3;
+        $$ = $1;
+    }
+;
 
-id_tail : MK_LB ICONST MK_RB id_tail 
-        {   
-            debug("parser::id_tail MK_LB ICONST MK_RB id_tail");
-            if ($4) {
-                $<s>$->dim = $<s>4->dim + 1;
-            } else {
-                $<s>$->dim = 1;
-            }
-        }
-        | OP_ASSIGN ICONST 
-        | OP_ASSIGN FCONST
-        | /* empty */ 
-        {
-            $$ = NULL;  // segfault fix: return NULL when epsilon
-        }
-        ;
+id_tail 
+    : OP_ASSIGN ICONST 
+    | OP_ASSIGN FCONST
+    | /* empty */ { 
+        $$ = NULL; 
+    }
+;
 
 type    : 
 INT  {debug("parser::type INT");}
