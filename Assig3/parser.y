@@ -237,8 +237,12 @@ else_tail   : ELSE stmt {debug("stmt: if(expr) { stmt } else { stmt}");}
 
 assign_expr : lhs OP_ASSIGN assign_expr_tail 
 {
-    if (!match_type($<s>1, $<s>3)) {
+    if (!match_type($<s>1, $<s>3))
         yyerror("type expression mismatch with assignment (=) ");
+    if($1->type == STRUCT_TY && $3->type == STRUCT_TY) {
+      if($1->type_ptr != $3->type_ptr) {
+	yyerror("Incompatible type");
+      }
     }
     $$=$1;
 }
@@ -367,6 +371,9 @@ expr    : lhs {}
     yyerror("type expression mismatch with binary operator");
     //TODO: get these %s's to work
     //yyerror("%s and %s type expression mismatch",$1,$3);
+  }
+  if($1 -> type == STRUCT_TY || $3 -> type == STRUCT_TY) {
+    yyerror("Invalid operands to binary operator");
   }
   $$=$1;
 }
@@ -516,6 +523,17 @@ STRUCT ID MK_LBRACE struct_decl_list MK_RBRACE {
   debug("parser::struct_decl STRUCT ID { struct_decl_list }");
   mytype_t *tmp = insert_type($<s>2->name,STRUCT_TY); //maybe free $<s>3 here ?
   tmp->head = $<sf>4;
+  entry_t **tmp_hashtable = h_init();
+  struct_field *sf_tmp = $<sf>4;
+  while(sf_tmp!=NULL) {
+    void *v_tmp = h_get(tmp_hashtable,sf_tmp->f_name);
+    //debug("parser::struct_decl STRUCT ID {struct_decl_list } with name = %s",sf_tmp->f_name);
+    if(v_tmp != NULL) {
+      yyerror("Duplicate member (name)");
+    }
+    h_insert(tmp_hashtable,sf_tmp->f_name, sf_tmp);
+    sf_tmp = sf_tmp -> next;
+  }
   $$=tmp;
 }
 ;
@@ -610,6 +628,7 @@ struct_var_decl    : type id_list
   $2->type = STRUCT_TY;
   $$=$2;
 }
+| STRUCT ID ID {debug("field(%s) undeclared",$<s>3->name);yyerror("field undeclared");}
 ;
 
 

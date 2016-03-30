@@ -1,0 +1,37 @@
+struct test {
+       int i1,i2;
+       float f1;
+       /*void i1;*/ /*throws duplicate member (name) error*/
+};
+
+struct complex1 { 
+float real; 
+float imag; 
+};
+struct complex1 x1, y1; 
+
+struct complex2 { 
+float real; 
+float imag; 
+}; 
+struct complex2 x2, y2; 
+
+struct S { 
+int a; 
+/*struct S next;*/ /* This is illegal in C-- */ 
+}; 
+
+
+int main(int b) {
+struct test t1;
+t1.f1=2.0;
+
+x1 = y1;	/* This is OK */ 
+
+x2 = y2;	/* This is OK */ 
+
+/*x1 = x1 + y1;	*/ /* This is invalid */	
+
+/*x1 = x2;*/ /*This is invalid */
+}
+

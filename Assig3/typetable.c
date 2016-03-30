@@ -42,7 +42,7 @@ struct_field *create_field(char *name, type_enum type) {
   strcpy(sf->f_name,name);
   sf->f_type=type;
   sf->next=NULL;
-  debug("create_field field %s(%d) created\n",name,type);
+  debug("create_field field %s(%d) created",name,type);
   return sf;
 }
 

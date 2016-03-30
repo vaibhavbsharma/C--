@@ -55,7 +55,8 @@ void delete_scope(int scope) {
     void **list = ht_to_list(symtab,&sz);
     for (i=0; i<sz; i++) {
         symtab_entry *entry = (symtab_entry *) list[i];
-        if (entry->scope >= scope) {
+        if (entry && entry->scope >= scope) {
+	  debug("symboltable::delete_scope deleting %s(%d)",entry->name,entry->scope);
             h_remove(symtab, gen_key(entry->name, scope));
         }
     }
