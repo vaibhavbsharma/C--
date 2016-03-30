@@ -6,7 +6,7 @@
   <meta name="generator" content="pandoc" />
   <title></title>
   <style type="text/css">code{white-space: pre;}</style>
-  <link rel="stylesheet" href="/Users/taejoon/Dropbox/settings/buttondown.css" type="text/css" />
+  <link rel="stylesheet" href="/home/taejoon/Dropbox/settings/buttondown.css" type="text/css" />
 </head>
 <body>
 <div id="TOC">
@@ -14,38 +14,45 @@
 <li><a href="#programming-assignment-3">Programming Assignment 3</a><ul>
 <li><a href="#members">Members</a></li>
 <li><a href="#directory-structure">Directory Structure</a></li>
-<li><a href="#qs">Qs</a></li>
+<li><a href="#handling-user-defined-typessame-as-assignment-2">Handling User-defined Types(same as Assignment 2)</a></li>
+<li><a href="#production-rules-for-parsing-c-code-similar-to-assignment-2">Production rules for parsing C– code (similar to Assignment 2)</a></li>
+<li><a href="#type-checking-rules-implemented">Type checking rules implemented</a></li>
+<li><a href="#rule-2---functions-and-function-calls">Rule 2 - Functions and function calls</a></li>
+<li><a href="#rule-3---array-reference">Rule 3 - Array Reference</a></li>
 </ul></li>
 </ul>
 </div>
 <h1 id="programming-assignment-3">Programming Assignment 3</h1>
-<p>CSCI 5161, Spring 2016<br />
-someday, March 0, 2016</p>
+<p>CSCI 5161, Spring 2016<br />Wednesday, March 29, 2016</p>
 <h2 id="members">Members</h2>
 <p>Vaibhav Sharma <script type="text/javascript">
 <!--
 h='&#x75;&#x6d;&#110;&#46;&#x65;&#100;&#x75;';a='&#64;';n='&#118;&#x61;&#x69;&#98;&#104;&#x61;&#118;';e=n+a+h;
 document.write('<a h'+'ref'+'="ma'+'ilto'+':'+e+'" clas'+'s="em' + 'ail">'+e+'<\/'+'a'+'>');
 // -->
-</script><noscript>&#118;&#x61;&#x69;&#98;&#104;&#x61;&#118;&#32;&#x61;&#116;&#32;&#x75;&#x6d;&#110;&#32;&#100;&#x6f;&#116;&#32;&#x65;&#100;&#x75;</noscript><br />
-Taejoon Byun <script type="text/javascript">
+</script><noscript>&#118;&#x61;&#x69;&#98;&#104;&#x61;&#118;&#32;&#x61;&#116;&#32;&#x75;&#x6d;&#110;&#32;&#100;&#x6f;&#116;&#32;&#x65;&#100;&#x75;</noscript><br />Taejoon Byun <script type="text/javascript">
 <!--
 h='&#x75;&#x6d;&#110;&#46;&#x65;&#100;&#x75;';a='&#64;';n='&#116;&#x61;&#x65;&#106;&#x6f;&#x6f;&#110;';e=n+a+h;
 document.write('<a h'+'ref'+'="ma'+'ilto'+':'+e+'" clas'+'s="em' + 'ail">'+e+'<\/'+'a'+'>');
 // -->
 </script><noscript>&#116;&#x61;&#x65;&#106;&#x6f;&#x6f;&#110;&#32;&#x61;&#116;&#32;&#x75;&#x6d;&#110;&#32;&#100;&#x6f;&#116;&#32;&#x65;&#100;&#x75;</noscript></p>
 <h2 id="directory-structure">Directory Structure</h2>
-<p><code>README.md</code>: this file<br />
-<code>Makefile</code>: make file <code>lexer3.l</code>: lexer rules<br />
-<code>parser.y</code>: parsing grammar<br />
-<code>common.h</code>: a common header file<br />
-<code>table.c</code>, <code>table.h</code>: keeps a lookup dictionary for user defined types<br />
-<code>hashtable.h</code>, <code>hashtable.c</code>: contains the hash table implementation</p>
-<h2 id="qs">Qs</h2>
+<p><code>README.md</code>: this file<br /><code>Makefile</code>: make file <code>lexer3.l</code>: lexer rules<br /><code>parser.y</code>: parsing grammar<br /><code>common.h</code>: a common header file<br /><code>hashtable.h</code>, <code>hashtable.c</code>: contains the hash table implementation<br /><code>symboltable.h</code>, <code>symboltable.c</code>: contains the symbol table implementation<br /><code>typetable.h</code>, <code>typetable.c</code>: keeps a lookup dictionary for user defined types</p>
+<h2 id="handling-user-defined-typessame-as-assignment-2">Handling User-defined Types(same as Assignment 2)</h2>
+<p>After completing the grammar rules, the biggest challenge we faced was to handle user-defined types, or <code>typedef</code>s. User-defined types are identifiers, but can be placed in the position of <code>type</code>s only after it is declared with <code>typedef</code> construct. We handled this in three steps.</p>
 <ul>
-<li>scope?</li>
-<li>union?</li>
-<li>struct for a symbol entry?</li>
+<li>First, we added an action to the production rule of <code>tyledef_decl</code> so that whenever there is a <code>typedef</code> in source code, we insert the <code>ID</code> into the hash table that keeps user-defined types, so that we can look up later.</li>
+<li>Second, we introduced a token <code>TYPEDEF_NAME</code> for user-defined types, and placed it in the production rule of <code>type</code>. This</li>
+<li>Third, we implemented an action in the lexer to produce <code>TYPEDEF_NAME</code> for user-defined types. This is implemented in the action for <code>ID</code>; when lexer matches <code>ID</code>, it looks up the hash table to see if the identifier is already in the lookup table. If it is, which means that the <code>ID</code> is declared as a user-defined type, lexer returns <code>TYPEDEF_NAME</code> token instead of <code>ID</code>.</li>
 </ul>
+<p>(we got hint of handling <code>typedef</code>s from the <em>ANSI C Yacc Grammar</em> presented in <a href="http://www.quut.com/c/ANSI-C-grammar-y.html#constant_expression">this page</a>.</p>
+<h2 id="production-rules-for-parsing-c-code-similar-to-assignment-2">Production rules for parsing C– code (similar to Assignment 2)</h2>
+<p>The production rules were adapted from sample Context Free Grammar shown in the slides during the lecture. These rules are present in parser.y. They allow a program to be described as a global declaration list which consists of a type and variable declaration list along with a function declaration list. Function declarations can further contain variable declarations along with C– statements. Functions may not take any parameters and may contain conditional statements, assignment statements and return statements. Statements allow expressions which can index into arrays and refer to member variables of a structure. Debug information printed by these statements can be ignored and replaced by creation of corresponding semantic records.</p>
+<h2 id="type-checking-rules-implemented">Type checking rules implemented</h2>
+<p>Except for rule 3(c) in the Type Checking Rules section of the assignment specification, we have completed implementation of all the rules. An exception which we did not implement is support for nested structures and unions. We have included two sample files which demonstrate the rules our parser works succesfully with. The first file is named ‘vtest’ and demonstrates type checking rules 4(a,b,c,d) as well as the rules mentioned in the Type Coercion section.</p>
+<h2 id="rule-2---functions-and-function-calls">Rule 2 - Functions and function calls</h2>
+<p>The rules that parses function declarations and function calls are <code>function_decl</code> and <code>function_call</code> respectively. In order to check the number of arguments when called, the list of parameter (at least the number of parameters) should be recoreded when function is being declared. This is done in <code>function_decl</code> rule by counting the number of parameters defined, and storing the information in <code>symtab_entry.n_args</code> field of <code>ID</code>. When function is called, the number of arguments are checked with the number of formal parameters, and prints an error message if they do not match. For the return type checking, we had to keep a global variable that points to the symbol table entry of the function that is being declared, so that it can be later referred in <code>return_stmt</code> rule. When <code>RETURN</code> token is being processed, the semantic routine infers the type of the expression that comes after <code>RETURN</code>, and matches it with the return type of the function being declared, by referring the global variable <code>current_function-&gt;type</code>.</p>
+<h2 id="rule-3---array-reference">Rule 3 - Array Reference</h2>
+<p>In order to keep track of array dimensions, we defined a field named <code>dim</code> in the structure <code>symtab_entry</code>. This variable is set in the parsing rule named <code>array_subscript</code>. Our plan was to compare array dimensions using this information whenever an array is referenced, but we could not fully implmenet it for the lack of time. However, we have implemented the rule <em>3.b</em> of array subscript type checking.</p>
 </body>
 </html>
