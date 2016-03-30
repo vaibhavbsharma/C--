@@ -430,6 +430,17 @@ STRUCT ID MK_LBRACE struct_decl_list MK_RBRACE {
   debug("parser::struct_decl STRUCT ID { struct_decl_list }");
   mytype_t *tmp = insert_type($<s>2->name,STRUCT_TY); //maybe free $<s>3 here ?
   tmp->head = $<sf>4;
+  entry_t **tmp_hashtable = h_init();
+  struct_field *sf_tmp = $<sf>4;
+  while(sf_tmp!=NULL) {
+    void *v_tmp = h_get(tmp_hashtable,sf_tmp->f_name);
+    //debug("parser::struct_decl STRUCT ID {struct_decl_list } with name = %s",sf_tmp->f_name);
+    if(v_tmp != NULL) {
+      yyerror("Duplicate member (name)");
+    }
+    h_insert(tmp_hashtable,sf_tmp->f_name, sf_tmp);
+    sf_tmp = sf_tmp -> next;
+  }
   $$=tmp;
 }
 ;
