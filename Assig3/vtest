@@ -24,7 +24,8 @@ int a;
 
 int main(int b) {
 struct test t1;
-t1.f1=2.0;
+/*t1.i1=2.0;*/ /*gives type expression mismatch with assignment */
+t1.f1=2; /*performs upcasting as allowed by C */
 
 x1 = y1;	/* This is OK */ 
 
