@@ -6,14 +6,11 @@ typedef enum {
   ARR_INT_TY, ARR_FLOAT_TY
 } type_enum;
 
-#define DEBUG
-
 /** a pseudo-itoa that converts an integer to string 
 * @param i    an integer to convert
 * @return     the integer converted to string
 * */
 char* myitoa(int i);
-
 
 #ifdef DEBUG
 #include <stdio.h>

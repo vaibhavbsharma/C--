@@ -113,3 +113,9 @@ information whenever an array is referenced, but we could not fully implmenet
 it for the lack of time. However, we have implemented the rule *3.b* of array
 subscript type checking.
 
+Note
+----
+
+Please compile with `DEBUG` flag (or `#define DEBUG` in `common.h`) to 
+increase verbosity.
+
