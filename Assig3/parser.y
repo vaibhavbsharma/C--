@@ -11,15 +11,17 @@
 static int linenumber = 1;
 int cur_scope = 0;
 bool match_type(symtab_entry *s1, symtab_entry *s2) {
-    if (s1->kind != s2->kind || s1->type != s2->type) {
+    if (s1->type != s2->type) {
         return false;
+    } else {
+        return true;
     }
+// TODO: other type matching. e.g. between arrays or structs.
     if (s1->kind == ARRAY && s2->kind == ARRAY) {
         if (s1->dim == s2->dim) {
             return true;
         }
     }
-    return false;
 }
 %}
 
@@ -35,7 +37,8 @@ bool match_type(symtab_entry *s1, symtab_entry *s2) {
 
 %type <type_info> param_type type  
 %type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr expr_member struct_var_decl
-%type <s> param_var_decl param_id_list function_call param call_param_list call_param_list_tail
+%type <s> param_id function_call param call_param_list call_param_list_tail
+%type <s> param_var_decl param_list param_list_tail
 %type <sf> struct_decl_list 
 %type <type_obj> struct_decl;
 
@@ -109,15 +112,32 @@ global_decl : decl_list function_decl  {
 | function_decl
 ;
 
-function_decl : type ID MK_LPAREN  {cur_scope++;} param_list MK_RPAREN MK_LBRACE  block MK_RBRACE {
+function_decl : type ID MK_LPAREN{debug("scope++"); cur_scope++;} param_list MK_RPAREN MK_LBRACE block MK_RBRACE {
+    $2->type = $<type_info>1;
+    $2->kind = FUNCTION;
+    // count the number of parameters
+    int n_param = 0;
+    if ($5) {
+        //Q: I don't know why the `param_list` is $5 instead of $4.
+        symtab_entry *handle = $<s>5;
+        do {
+            debug("\thandle: %s", handle);
+            handle = handle->next;
+            n_param ++;
+        } while (handle);
+    }
+    $2->n_param = n_param;
+
+    // warning: order matters! do not delete scope earlier or later.
     delete_scope(cur_scope--);
-    $<s>2->type = $<type_info>1;
-    $<s>2->kind = FUNCTION;
+
     if (!insert_symbol($2, cur_scope)) {
         yyerror("variable %s is already declared", $2);
     } else {
         symtab_entry *s = lookup_symtab($2->name, cur_scope);
-        debug("function_decl: symbol inserted. (name: %s, scope: %d, type: %d, kind: %d)", s->name, s->scope, s->type, s->kind);
+        debug("function_decl: symbol inserted.");
+        debug("\t(name: %s, scope: %d, type: %d, kind: %d, n_param: %d)", 
+                s->name, s->scope, s->type, s->kind, s->n_param);
     }
 }
 ;
@@ -131,32 +151,43 @@ stmt_list: stmt_list stmt  {debug("stmt_list: stmt_list stmt");}
 ;
 
 param_list
-    : param_var_decl {
-        debug("param_list: param_var_decl");
+    : param_var_decl param_list_tail {
+        $1->next = $2 ? $2 : NULL;
+        $$ = $1;
+        debug("param_list: %s %s", $1, $2);
     }
-    | param_list MK_COMMA param_var_decl {  
-        debug("param_list: param_list, param_var_decl");
-    }
-    | /* empty */
+    | /* empty */ { $$ = NULL; }
 ; 
 
-param_var_decl : param_type param_id_list 
+param_list_tail
+    : MK_COMMA param_var_decl param_list_tail
+    {
+        debug("param_list_tail: , %s %s", $2, $3);
+        $2->next = $3 ? $3 : NULL;
+        $$ = $2;
+    }
+    | /* empty */
+    {
+        $$ = NULL;
+    }
+;
+
+param_var_decl : param_type param_id
 {
     //Add id in $2 to symbol table with type and scope info
-    symtab_entry *handle = $<s>2;
-    handle->type = $<type_info>1;
-    if (!insert_symbol(handle, cur_scope)) {
+    $2->type = $<type_info>1;
+    if (!insert_symbol($2, cur_scope)) {
         yyerror("variable %s is already declared", $2);
     } else {
-        symtab_entry *s = lookup_symtab(handle->name, cur_scope);
+        symtab_entry *s = lookup_symtab($2->name, cur_scope);
         debug("param_var_decl: symbol inserted. (name: %s, scope: %d, type: %d, kind: %d)", 
             s->name, s->scope, s->type, s->kind);
     }
-    $2->type = $1;
+    $$ = $2;
 }
 ;
 
-param_id_list: ID param_id_tail {$$=$1;} 
+param_id: ID param_id_tail {$$=$1;} 
 ;
 
 param_id_tail: MK_LB ICONST MK_RB param_id_tail
@@ -207,7 +238,7 @@ else_tail   : ELSE stmt {debug("stmt: if(expr) { stmt } else { stmt}");}
 assign_expr : lhs OP_ASSIGN assign_expr_tail 
 {
     if (!match_type($<s>1, $<s>3)) {
-        yyerror("type expression mismatch with =");
+        yyerror("type expression mismatch with assignment (=) ");
     }
     $$=$1;
 }
@@ -227,7 +258,7 @@ function_call
         if (!s) { 
             yyerror("ID undeclared");
         } else {
-            $$ = s;//TODO maybe free the symtab_entry in $1 ?
+            $$ = s; //TODO maybe free the symtab_entry in $1 ?
         }
         if ($3) {
             /* check if the number of arguments matches */
@@ -237,10 +268,10 @@ function_call
                 handle = handle->next;
                 cnt++;
             }
-            debug("\tn_args: %d", cnt);
-            if (cnt > s->n_arg) {
+            debug("\tn_param: %d, expected: %d", cnt, s->n_param);
+            if (cnt > s->n_param) {
                 yyerror("too many arguments to function (function)");
-            } else if (cnt < s->n_arg) {
+            } else if (cnt < s->n_param) {
                 yyerror("too few arguments to function (function)");
             }
         }
