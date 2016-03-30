@@ -137,7 +137,6 @@ function_decl
 
         // warning: order matters! do not delete scope earlier or later.
         delete_scope(cur_scope--);
-
         if (!insert_symbol($2, cur_scope)) {
             yyerror("variable %s is already declared", $2);
         } else {

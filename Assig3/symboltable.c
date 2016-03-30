@@ -53,11 +53,22 @@ void delete_scope(int scope) {
     // hasth table entries in a list, for a faster search
     debug("symboltable::delete_scope(%d)", scope);
     void **list = ht_to_list(symtab,&sz);
+    debug("sz: %d", sz);
     for (i=0; i<sz; i++) {
         symtab_entry *entry = (symtab_entry *) list[i];
-        if (entry && entry->scope >= scope) {
-	  debug("symboltable::delete_scope deleting %s(%d)",entry->name,entry->scope);
-            h_remove(symtab, gen_key(entry->name, scope));
+        debug("\tentry: %s, scope: %d", entry, entry->scope);
+    }
+    for (i=0; i<sz; i++) {
+        symtab_entry *entry = (symtab_entry *) list[i];
+        //debug("\tentry: %s", entry);
+        if (!entry) {
+            continue;
+        }
+        debug("\tentry: %s, scope: %d", entry->name, entry->scope);
+        if (entry->scope >= scope) {
+            debug("delete_scope(%d) deleting %s", entry->scope, entry->name);
+            h_remove(symtab, gen_key(entry->name, entry->scope));
         }
     }
+    free(list);
 }

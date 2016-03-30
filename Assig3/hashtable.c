@@ -62,7 +62,6 @@ bool ll_insert(entry_t *first, entry_t *node) {
         handle = handle->next;
     }
     handle->next = node;
-    ht_size ++;
     return true;
 }
 
@@ -76,7 +75,6 @@ bool h_insert_entry(entry_t **h_table, entry_t *ent) {
         // empty
         free(h_table[ent->index]);
         h_table[ent->index] = ent;
-        ht_size ++;
         return true;
     } else {
         return ll_insert(h_table[ent->index], ent);
@@ -115,7 +113,7 @@ entry_t **h_init() {
 bool h_insert(entry_t **h_table, char *key, void *data) {
     entry_t *entry = (entry_t*) malloc(sizeof(entry_t));
     entry->index = hash(key);
-    entry->key = (char*) malloc(strlen(key) * sizeof(char));
+    entry->key = (char*) malloc(strlen(key)+1 * sizeof(char));
     strcpy(entry->key, key);
     entry->data = data;
     entry->next = NULL;
@@ -132,16 +130,24 @@ void *h_get(entry_t **h_table, char *key) {
 }
 
 void **ht_to_list(entry_t **h_table, int *size) {
-    int ind = 0;
-    int i;
-    void **list = malloc(ht_size * sizeof(void*));
+    int ind = 0, cnt = 0;
     if (!h_table) {
         fprintf(stderr, "wrong pointer to a hash table\n");
         return NULL;
     }
+    for (int i=0; i<HT_SIZ; i++) {
+        if (h_table[i]->index == -1) {
+            continue;
+        }
+        entry_t *handle = h_table[i];
+        do {
+            if (handle) cnt++;
+        } while ((handle = handle->next));
+    }
+    void **list = malloc(cnt * sizeof(void*));
     /* traverse through the table and copy only 
      * the pointers to data object to the list */
-    for (i=0; i<HT_SIZ; i++) {
+    for (int i=0; i<HT_SIZ; i++) {
         if (h_table[i]->index == -1) {
             continue;
         }
@@ -155,8 +161,8 @@ void **ht_to_list(entry_t **h_table, int *size) {
         } while (handle);
     }
     *size = ind;
-    for (i=0; i<ind; i++) {
-        //debug("hashtable.c::ht_to_list() id: %s", (char *) list[i]);
+    for (int i=0; i<ind; i++) {
+        debug("hashtable.c::ht_to_list() id: %s", (char *) list[i]);
     }
     return list;
 }
@@ -169,7 +175,7 @@ bool h_remove(entry_t **h_table, char *key) {
     /* traverse the linked list of the index `hash(key)` from the head */
     entry_t *prev = NULL;
     entry_t *curr = h_table[hash(key)];
-    while (curr->next != NULL && curr != found) {
+    while (curr != found) {
         prev = curr;
         curr = curr->next;
     }
@@ -177,14 +183,14 @@ bool h_remove(entry_t **h_table, char *key) {
         /* there is a previous node to link to the next node
          * : link `prev` to `next` */
         prev->next = curr->next;
-        free(curr->key);
+        //free(curr->key);
         free(curr->data);
-        free(curr);
+        //free(curr);
     } else {
         /* there is not; the node to delete is the first one 
          * in the linked list */
         // free & initialize
-        free(curr->key);
+        //free(curr->key);
         free(curr->data);
         curr->index = -1;
         curr->next = NULL;
