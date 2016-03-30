@@ -7,7 +7,7 @@ mytype_t *insert_type(char *type, type_enum _t) {
     t->type = _t;
     t->head = NULL;
     h_insert(typetab, type, t);
-    printf("insert_type %s(%d) inserted succesfully\n",type,_t);
+    debug("insert_type %s(%d) inserted succesfully\n",type,_t);
     return t;
 }
 
@@ -22,11 +22,11 @@ int is_type_exists(char *type) {
 type_enum get_type(char *type) {
   mytype_t *t = (mytype_t *)h_get(typetab,type);
   if (t!=NULL) {
-    printf("get_type %s has type (%d)\n",type,t->type);
+    debug("get_type %s has type (%d)\n",type,t->type);
     return t->type;
   }
   else {
-    printf("get_type %s returning default type\n", type);
+    debug("get_type %s returning default type\n", type);
     return INT_TY;
   }
 }
