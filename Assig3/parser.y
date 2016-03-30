@@ -191,6 +191,11 @@ assign_expr : lhs OP_ASSIGN assign_expr_tail
       if($1->type != $3->type) {
         yyerror("type expression mismatch with =");
       }
+      if($1->type == STRUCT_TY && $3->type == STRUCT_TY) {
+	if($1->type_ptr != $3->type_ptr) {
+	  yyerror("Incompatible type");
+	}
+      }
       $$=$1;
     }
 ;

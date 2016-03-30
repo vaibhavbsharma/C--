@@ -23,7 +23,10 @@ t1.f1=2.0;
 
 x1 = y1;	/* This is OK */ 
 
-x1 = x1 + y1;	/* This is invalid */	
+x2 = y2;	/* This is OK */ 
 
+/*x1 = x1 + y1;	*/ /* This is invalid */	
+
+/*x1 = x2;*/ /*This is invalid */
 }
 
