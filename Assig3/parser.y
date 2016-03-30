@@ -137,6 +137,7 @@ function_decl
 
         // warning: order matters! do not delete scope earlier or later.
         delete_scope(cur_scope--);
+        debug("function_decl: completed delete_scope");
         if (!insert_symbol($2, cur_scope)) {
             yyerror("variable %s is already declared", $2);
         } else {
@@ -269,7 +270,8 @@ else_tail   : ELSE stmt {debug("stmt: if(expr) { stmt } else { stmt}");}
 
 assign_expr : lhs OP_ASSIGN assign_expr_tail 
 {
-    if (!match_type($<s>1, $<s>3))
+    if (!match_type($<s>1, $<s>3)  
+     && !($1->type==FLOAT_TY && $3->type==INT_TY) )
         yyerror("type expression mismatch with assignment (=) ");
     if($1->type == STRUCT_TY && $3->type == STRUCT_TY) {
       if($1->type_ptr != $3->type_ptr) {
@@ -393,7 +395,8 @@ expr    : lhs {}
         | expr binop expr 
 {
   debug("expr: expr binop expr");
-  if($1->type != $3->type) {
+  if(($1->type != $3->type) && !($1->type==INT_TY && $3->type==FLOAT_TY)
+     && !($1->type==FLOAT_TY && $3->type==INT_TY)) {
     yyerror("type expression mismatch with binary operator");
     //TODO: get these %s's to work
     //yyerror("%s and %s type expression mismatch",$1,$3);

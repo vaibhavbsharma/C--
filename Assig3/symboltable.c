@@ -56,10 +56,6 @@ void delete_scope(int scope) {
     debug("sz: %d", sz);
     for (i=0; i<sz; i++) {
         symtab_entry *entry = (symtab_entry *) list[i];
-        debug("\tentry: %s, scope: %d", entry, entry->scope);
-    }
-    for (i=0; i<sz; i++) {
-        symtab_entry *entry = (symtab_entry *) list[i];
         //debug("\tentry: %s", entry);
         if (!entry) {
             continue;
