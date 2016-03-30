@@ -22,7 +22,7 @@ Directory Structure
 `symboltable.h`, `symboltable.c`: contains the symbol table implementation  
 `typetable.h`, `typetable.c`: keeps a lookup dictionary for user defined types   
 
-Handling User-defined Types(same as Assignment 2)
+Handling User-defined Types (same as Assignment 2)
 -------------------------------------------------
 
 After completing the grammar rules, the biggest challenge we faced was to 
@@ -48,16 +48,42 @@ but can be placed in the position of `type`s only after it is declared with
 Production rules for parsing C-- code (similar to Assignment 2)
 --------------------------------------------------------------
 
-The production rules were adapted from sample Context Free Grammar shown in the slides during the lecture. These rules are present in parser.y. They allow a program to be described as a global declaration list which consists of a type and variable declaration list along with a function declaration list. Function declarations can further contain variable declarations along with C-- statements. Functions may not take any parameters and may contain conditional statements, assignment statements and return statements. Statements allow expressions which can index into arrays and refer to member variables of a structure.
-Debug information printed by these statements can be ignored and replaced by creation of corresponding semantic records.
+The production rules were adapted from sample Context Free Grammar shown in the
+slides during the lecture. These rules are present in parser.y. They allow a
+program to be described as a global declaration list which consists of a type
+and variable declaration list along with a function declaration list. Function
+declarations can further contain variable declarations along with C--
+statements. Functions may not take any parameters and may contain conditional
+statements, assignment statements and return statements. Statements allow
+expressions which can index into arrays and refer to member variables of a
+structure. Debug information printed by these statements can be ignored and
+replaced by creation of corresponding semantic records.
 
-Type checking rules implemented
--------------------------------
+Type checking rules & structures
+--------------------------------
 
-Except for rule 3(c) in the Type Checking Rules section of the assignment specification, we have completed implementation of all the rules. 
-An exception which we did not implement is support for nested structures and unions.
-We have included two sample files which demonstrate the rules our parser works succesfully with.
-The first file is named 'vtest' and demonstrates type checking rules 4(a,b,c,d) as well as the rules mentioned in the Type Coercion section.
+Except for rule 3(c) in the Type Checking Rules section of the assignment
+specification, we have completed implementation of all the rules. An exception
+which we did not implement is support for nested structures and unions. We have
+included two sample files which demonstrate the rules our parser works
+succesfully with. The first file is named 'vtest' and demonstrates type
+checking rules 4(a,b,c,d) as well as the rules mentioned in the Type Coercion
+section. Except for rules 3(a,c) in the Type Checking Rules section of the
+assignment specification, we have completed implementation of all the rules. An
+exception which we did not implement is support for nested structures and
+unions. We have included two sample files which demonstrate the rules our
+parser works succesfully with. The first file is named 'vtest' and demonstrates
+type checking rules 4(a,b,c,d) as well as the rules mentioned in the Type
+Coercion section. For implementing Rule 4, for each symbol table entry which is
+of type structure, we also include in each such object a pointer to a type
+object(mytype\_t in typetable.h) which contains a pointer to the head of a
+linked list containing all the fields declared in a structure declaration. This
+linked list of stucture fields helps us check for duplicate member variables as
+well as capture the type information of each of the member variables in the
+structure. It also prevents us from inserting these member variables into the
+symbol table. While we have included in our production rules allowance for
+defining nested structures and unions, we did not allow use of them in our
+production rules.
 
 Rule 2 - Functions and function calls
 -------------------------------------
