@@ -224,7 +224,7 @@ call_param_list_tail    : MK_COMMA lhs call_param_list_tail
                         |
                         ;
 
-lhs: ID expr_id_tail expr_member {
+lhs: ID expr_id_tail MK_DOT ID {
   symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
   if(!s) s=lookup_symtab($<s>1->name,0);
   if(!s) yyerror("ID undeclared");
@@ -236,7 +236,7 @@ lhs: ID expr_id_tail expr_member {
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
 }
-| ID expr_member {
+| ID MK_DOT ID {
   symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
   if(!s) s=lookup_symtab($<s>1->name,0);
   if(!s) yyerror("ID undeclared");
@@ -249,7 +249,7 @@ lhs: ID expr_id_tail expr_member {
     struct_field *sf=type_obj->head;
     int found=0;
     while(sf != NULL) {
-      if(strcmp(sf->f_name,$<s>2->name)==0) {
+      if(strcmp(sf->f_name,$<s>3->name)==0) {
 	found=1;
 	$$=s;
 	$<s>$->type=sf->f_type;
@@ -257,8 +257,10 @@ lhs: ID expr_id_tail expr_member {
       debug("field %s(%d)",sf->f_name,sf->f_type);
       sf = sf -> next; 
     }
-    if(found == 0) 
-      yyerror("%s has no member named %s",type_obj->name,$<s>2->name);
+    if(found == 0) { 
+      debug("Structure %s has no member named %s",type_obj->name,$<s>3->name);
+      yyerror("missing member in structure");
+    }
   }
 }
 | ID {
@@ -273,8 +275,6 @@ expr_id_tail    : MK_LB ICONST MK_RB expr_id_tail
                 | MK_LB ID MK_RB expr_id_tail
                 ;
 
-expr_member : MK_DOT lhs {$$=$2;}
-            ;
 
 
 expr    : lhs {}
