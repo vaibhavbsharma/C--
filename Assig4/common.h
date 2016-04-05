@@ -21,6 +21,14 @@ char* myitoa(int i);
 #define debug(M, ...)
 #endif
 
+/** macros and globals for code generation */
+char *output_file; //< code generation output
+
+#define emit(CODE, ...) fprintf(stdout, CODE "\n", ##__VA_ARGS__)
+#else
+#define debug(M, ...)
+#endif
+
 /** maximum size of an identifier */
 #define ID_SIZ 257
 
