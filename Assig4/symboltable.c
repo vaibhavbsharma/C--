@@ -4,18 +4,6 @@ void init_symtab() {
     symtab = h_init();
 }
 
-/** A private function to generate a unique key for a given ID name in a 
- * certain scope.
- * @param name      The name of the ID
- * @param scope     The scope wherein the ID is declared
- * @return          The key generated, of length {common.h::SYMTAB_KEY_SIZ}
- * */
-char* gen_key(char *name, int scope) {
-    /* note: the length of the string returned by `myitoa(scope)` is 
-     * common.h::SYMTAB_KEY_SIZ (260) */
-    return strcat(myitoa(scope), name);
-}
-
 bool insert_symbol(symtab_entry *s, int scope) {
     //debug("symboltable::insert_symbol(): scope %d, s->name %s", scope, s->name);
     /* use the scope as a prefix of the key in order to differentiate IDs 

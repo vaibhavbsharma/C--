@@ -11,10 +11,12 @@ typedef struct symtab_entry{
     int scope;
     type_enum type;
     enum {
-        NONE, FUNCTION, ARRAY
+        NONE, FUNCTION, ARRAY, STRUCTURE, FIELD
     } kind;
+    /* if array */
     int n_param;                //< number of parameter (when FUNCTION)
     int dim;                    //< dimension
+    //TODO: put a pointer variable to type table entry
     struct symtab_entry* next;
     void *type_ptr;             //< points to mytype_t object if at all
 } symtab_entry;

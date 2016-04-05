@@ -34,3 +34,12 @@ extern FILE *yyout;
 #define SYMTAB_KEY_SIZ 260  
 
 #endif
+
+/** A function to generate a unique key for a given ID name in a 
+ * certain scope.
+ * @param name      The name of the ID
+ * @param scope     The scope wherein the ID is declared
+ * @return          The key generated, of length {common.h::SYMTAB_KEY_SIZ}
+ * */
+char* gen_key(char *name, int scope);
+

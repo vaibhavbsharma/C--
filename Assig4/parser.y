@@ -8,6 +8,7 @@
 #include <string.h>
 #include "typetable.h"
 #include "symboltable.h"
+
 static int linenumber = 1;
 int cur_scope = 0;
 bool match_type(symtab_entry *s1, symtab_entry *s2) {
@@ -34,7 +35,7 @@ symtab_entry *current_function; // current function symbol
   char* str;
   type_enum type_info;
   struct_field *sf;
-  mytype_t *type_obj;
+  typetab_entry *type_obj;
 }
 
 %type <type_info> param_type type  
@@ -369,8 +370,8 @@ lhs: ID array_subscript MK_DOT ID {
     yyerror("%s is not of type structure");
   }
   if(s->type_ptr != NULL) {
-    mytype_t *type_obj = (mytype_t *)s->type_ptr;
-    struct_field *sf=type_obj->head;
+    typetab_entry *type_obj = (typetab_entry *)s->type_ptr;
+    struct_field *sf=type_obj->next;
     int found=0;
     while(sf != NULL) {
       if(strcmp(sf->f_name,$<s>3->name)==0) {
@@ -452,7 +453,7 @@ var_decl    : type id_list
 
 | STRUCT STRUCT_NAME id_list {
   debug("parser::var_decl STRUCT STRUCT_NAME %s",$<str>2);
-  mytype_t *struct_type_obj = get_type_obj($<str>2);
+  typetab_entry *struct_type_obj = get_type_obj($<str>2);
   //Add id in $2 to symbol table with type and scope info
   symtab_entry *handle = $<s>3;
   do {
@@ -542,44 +543,48 @@ MK_LBRACE struct_decl_list MK_RBRACE {debug("parser::struct_block { struct_decl_
 ;
 
 
-struct_decl     : 
-STRUCT ID MK_LBRACE struct_decl_list MK_RBRACE {
-  debug("parser::struct_decl STRUCT ID { struct_decl_list }");
-  mytype_t *tmp = insert_type($<s>2->name,STRUCT_TY); //maybe free $<s>3 here ?
-  tmp->head = $<sf>4;
-  entry_t **tmp_hashtable = h_init();
-  struct_field *sf_tmp = $<sf>4;
-  while(sf_tmp!=NULL) {
-    void *v_tmp = h_get(tmp_hashtable,sf_tmp->f_name);
-    //debug("parser::struct_decl STRUCT ID {struct_decl_list } with name = %s",sf_tmp->f_name);
-    if(v_tmp != NULL) {
-      yyerror("Duplicate member (name)");
+struct_decl     
+    : STRUCT ID MK_LBRACE struct_decl_list MK_RBRACE {
+        debug("parser::struct_decl STRUCT ID { struct_decl_list }");
+        typetab_entry *tmp = insert_type($<s>2->name, STRUCT_TY); //maybe free $<s>3 here ?
+      tmp->next = $<sf>4;
+      entry_t **tmp_hashtable = h_init();
+      struct_field *sf_tmp = $<sf>4;
+      while(sf_tmp!=NULL) {
+        void *v_tmp = h_get(tmp_hashtable,sf_tmp->f_name);
+        //debug("parser::struct_decl STRUCT ID {struct_decl_list } with name = %s",sf_tmp->f_name);
+        if(v_tmp != NULL) {
+          yyerror("Duplicate member (name)");
+        }
+        h_insert(tmp_hashtable,sf_tmp->f_name, sf_tmp);
+        sf_tmp = sf_tmp -> next;
+      }
+      $$=tmp;
     }
-    h_insert(tmp_hashtable,sf_tmp->f_name, sf_tmp);
-    sf_tmp = sf_tmp -> next;
-  }
-  $$=tmp;
-}
 ;
 
-struct_decl_list   : 
-struct_decl_list type_decl MK_SEMICOLON {debug("parser::struct_decl_list struct_decl_list type_decl");}
-| type_decl MK_SEMICOLON {debug("parser::struct_decl_list type_decl");} 
-| struct_decl_list struct_var_decl MK_SEMICOLON {
-  debug("parser::struct_decl_list struct_decl_list struct_var_decl ;");
-  struct_field *head = $<sf>1;
-  while(head->next != NULL) head = head->next;
-  struct_field *sf = create_field($<s>2->name, $<s>2->type);
-  head->next = sf; 
-  symtab_entry *s = $<s>2->next;
-  while(s != NULL) {
-    struct_field *sf_new = create_field(s->name, s->type);
-    sf->next = sf_new;
-    sf = sf_new;
-    s = s -> next;
-  }  
-  $$=$1;
-}
+struct_decl_list   
+    : struct_decl_list type_decl MK_SEMICOLON {
+        debug("parser::struct_decl_list struct_decl_list type_decl");
+    }
+    | type_decl MK_SEMICOLON {
+        debug("parser::struct_decl_list type_decl");
+    } 
+    | struct_decl_list struct_var_decl MK_SEMICOLON {
+        debug("parser::struct_decl_list struct_decl_list struct_var_decl ;");
+        struct_field *head = $<sf>1;
+        while(head->next != NULL) head = head->next;
+        struct_field *sf = create_field($<s>2->name, $<s>2->type);
+        head->next = sf; 
+        symtab_entry *s = $<s>2->next;
+        while(s != NULL) {
+            struct_field *sf_new = create_field(s->name, s->type);
+            sf->next = sf_new;
+            sf = sf_new;
+            s = s -> next;
+        }
+        $$=$1;
+    }
 | struct_var_decl MK_SEMICOLON {
   debug("parser::struct_decl_list struct_var_decl ;");
   struct_field *sf = create_field($<s>1->name, $<s>1->type);
@@ -628,7 +633,7 @@ struct_var_decl    : type id_list
 
 | STRUCT STRUCT_NAME id_list {
   debug("parser::type STRUCT STRUCT_NAME %s",$<str>2);
-  mytype_t *struct_type_obj = get_type_obj($<str>2);
+  typetab_entry *struct_type_obj = get_type_obj($<str>2);
   //Add id in $2 to symbol table with type and scope info
   symtab_entry *handle = $<s>3;
   do {

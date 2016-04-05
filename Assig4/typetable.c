@@ -1,26 +1,81 @@
 #include "typetable.h"
 
 
-mytype_t *insert_type(char *type, type_enum _t) {
-    mytype_t *t = malloc(sizeof(mytype_t));
-    strcpy(t->name, type);
+typetab_entry *insert_typedef(char *type_name, type_enum _t) {
+    typetab_entry *t = malloc(sizeof(typetab_entry));
+    strcpy(t->name, type_name);
     t->type = _t;
-    t->head = NULL;
-    h_insert(typetab, type, t);
-    debug("insert_type %s(%d) inserted succesfully\n",type,_t);
+    t->kind = TYPEDEF_T;
+    t->next = NULL;
+    if (!h_insert(typetab, type_name, t)) {
+        /* error handling: key collision*/
+        debug("insert_typedef::ERROR: collision occurred while inserting %s", 
+                type_name);
+        return NULL;
+    }
+    debug("insert_type:: %s(%d) of typedef inserted succesfully\n", 
+            type_name, _t);
     return t;
 }
 
-int is_type_exists(char *type) {
-  if (h_get(typetab,type) == NULL) {
-        return 0;
-    } else {
-        return 1;
+typetab_entry *insert_struct(char *struct_name) {
+    typetab_entry *t = malloc(sizeof(typetab_entry));
+    strcpy(t->name, struct_name);
+    t->type = STRUCT_TY;
+    t->kind = STRUCT_T;
+    t->next = NULL;
+    if (!h_insert(typetab, struct_name, t)) {
+        /* error handling: key collision*/
+        debug("insert_typedef::ERROR: collision occurred while inserting %s", 
+                type_name);
+        return NULL;
     }
+    return t;
 }
 
+typetab_entry *insert_field(char *struct_name, char *field_name, 
+        type_enum field_type) {
+    typetab_entry *struct_entry = h_get(typetab, struct_name);
+    if (!struct_entry) {
+        debug("insert_field::ERROR: invalid structure name %s", struct_name);
+        return NULL;
+    }
+    if (struct_entry->kind != STRUCT_T) {
+        debug("insert_field::ERROR: %s is not a structure", struct_name);
+        return NULL;
+    }
+    // create a field
+    typetab_entry *field = malloc(sizeof(typetab_entry));
+    strcpy(field->name, field_name);
+    field->kind = FIELD_T;
+    field->type = field_type;
+    field->next = NULL;
+    
+    // attach the field to the belonging structure
+    typetab_entry *handle = struct_entry;
+    while (handle->next) {
+        /* move the handle to the last element of the linked list 
+         * while checking for name collision */
+        if (strcmp(handle->name, field_name) == 0) {
+            // duplicate member name
+            debug("indert_field::ERROR: field name %s already exists"
+                    "in structure %s", field_name, struct_name);
+        }
+    }
+    handle->next = t;   // attach
+
+    return t;
+}
+
+
+bool is_type_exists(char *type) {
+    return h_get(typetab, type) ? true : false;
+}
+
+
+//TODO: refactor
 type_enum get_type(char *type) {
-  mytype_t *t = (mytype_t *)h_get(typetab,type);
+  typetab_entry *t = (typetab_entry *)h_get(typetab,type);
   if (t!=NULL) {
     debug("get_type %s has type (%d)\n",type,t->type);
     return t->type;
@@ -31,12 +86,11 @@ type_enum get_type(char *type) {
   }
 }
   
-
 void init_typetab() {
     typetab = h_init();
 }
 
-
+// TODO: remove & replace the call to this with insert_field
 struct_field *create_field(char *name, type_enum type) {
   struct_field *sf = malloc(sizeof(struct_field));
   strcpy(sf->f_name,name);
@@ -46,10 +100,11 @@ struct_field *create_field(char *name, type_enum type) {
   return sf;
 }
 
-mytype_t *get_type_obj(char *type ){
+// TODO: remove
+typetab_entry *get_type_obj(char *type ){
   debug("get_type_obj getting type object for type %s",type);
-  mytype_t *t = (mytype_t *)h_get(typetab,type);
-  struct_field *sf = t->head;
+  typetab_entry *t = (typetab_entry *)h_get(typetab,type);
+  struct_field *sf = t->next;
   while(sf != NULL) {
     debug("get_type_obj found field %s(%d) in type %s",sf->f_name, sf->f_type,type);
     sf = sf->next;
