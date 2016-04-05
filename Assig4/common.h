@@ -1,6 +1,8 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#include <stdio.h>
+
 typedef enum {
   VOID_TY, INT_TY, FLOAT_TY, TYPEDEF_TY, STRUCT_TY, UNION_TY, 
   ARR_INT_TY, ARR_FLOAT_TY
@@ -21,13 +23,9 @@ char* myitoa(int i);
 #define debug(M, ...)
 #endif
 
+extern FILE *yyout;
 /** macros and globals for code generation */
-char *output_file; //< code generation output
-
-#define emit(CODE, ...) fprintf(stdout, CODE "\n", ##__VA_ARGS__)
-#else
-#define debug(M, ...)
-#endif
+#define emit(CODE, ...) fprintf(yyout, CODE "\n", ##__VA_ARGS__)
 
 /** maximum size of an identifier */
 #define ID_SIZ 257

@@ -240,7 +240,12 @@ stmt    : block_stmt
 
 block_stmt  : MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;}
 
-if_stmt     : IF MK_LPAREN expr MK_RPAREN stmt else_tail 
+if_stmt     
+    : IF MK_LPAREN expr MK_RPAREN stmt else_tail 
+    {
+        emit("char *test = \"testing if it works\";");
+        emit("char *test2 = \"some code with lucky integer: %d\";", 7);
+    }
 
 while_stmt  : WHILE MK_LPAREN expr MK_RPAREN stmt {debug("stmt: while(expr) stmt");}
 
@@ -663,6 +668,12 @@ char *argv[];
     init_typetab();
     init_symtab();
      	yyin = fopen(argv[1],"r");
+        yyout = fopen(argv[2], "w");
+        if (!yyout) {
+            fprintf(stderr, "output file is not specified. "
+                    "code will be emitted to <stdout>.\n");
+            yyout = stdout;
+        }
      	yyparse();
      	printf("%s\n", "Parsing completed. No errors found.");
   } 
