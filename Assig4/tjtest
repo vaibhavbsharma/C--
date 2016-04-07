@@ -12,5 +12,11 @@ int main() {
     if (a) {
         write("hello parser");
     }
+
+    if (b == 0) {
+        write("b is zero");
+    } else {
+        write("b is not zero");
+    }
 }
 

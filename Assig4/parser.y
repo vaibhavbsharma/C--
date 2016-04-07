@@ -252,14 +252,40 @@ stmt    : block_stmt
 /* other C-- statements */
 ;
 
-block_stmt  : MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;}
-
-if_stmt     
-    : IF MK_LPAREN expr {} MK_RPAREN stmt else_tail 
-    {
-        emit("char *test = \"testing if it works\";");
-        emit("char *test2 = \"some code with lucky integer: %d\";", 7);
+block_stmt 
+    : MK_LBRACE {
+        cur_scope++; 
+        emit("\tnop");
+    } block MK_RBRACE {
+        cur_scope--;
     }
+
+if_stmt 
+    : IF MK_LPAREN expr { // simple IF (slide8-page21)
+/*
+TJ Note:
+    I first tried to refactor the rule as appears on the lecture slide,
+    but it didn't work possibly due to some parser conflict. Instead,
+    I tried to come up with a clever way of code generation that works in both
+    cases either when `else_part` is nullable or not. But still not sure if it
+    would work as expected..
+*/
+        // #gen_test
+        emit("\tbeqz %s, _Lelse%d", $3->place, ++label_no);
+        s_push(label_stack, label_no);
+    } MK_RPAREN stmt {
+        // #gen_label
+        emit("\tj _Lexit%d", s_get(label_stack));
+        emit("_Lelse%d:", s_get(label_stack));
+    } else_part {
+        emit("_Lexit%d:", s_get(label_stack));
+        s_pop(label_stack);
+    }
+
+else_part 
+    : ELSE stmt 
+    | /* empty */ 
+;
 
 while_stmt  : WHILE MK_LPAREN expr MK_RPAREN stmt {debug("stmt: while(expr) stmt");}
 
@@ -282,10 +308,6 @@ return_stmt
         }
         $<s>$ = $2;
     }
-
-else_tail   : ELSE stmt {debug("stmt: if(expr) { stmt } else { stmt}");} 
-|
-;
 
 assign_expr : lhs OP_ASSIGN assign_expr_tail 
 {
