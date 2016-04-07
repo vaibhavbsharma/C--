@@ -8,8 +8,10 @@
 #include <string.h>
 #include "typetable.h"
 #include "symboltable.h"
+
 static int linenumber = 1;
 int cur_scope = 0;
+
 bool match_type(symtab_entry *s1, symtab_entry *s2) {
     if (s1->type != s2->type) {
         return false;
@@ -38,8 +40,8 @@ symtab_entry *current_function; // current function symbol
 }
 
 %type <type_info> param_type type  
-%type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr expr_member struct_var_decl
-%type <s> param_id function_call param call_param_list call_param_list_tail
+%type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr struct_var_decl
+%type <s> function_call param call_param_list call_param_list_tail
 %type <s> param_var_decl param_list param_list_tail array_subscript subscript_expr
 %type <sf> struct_decl_list 
 %type <type_obj> struct_decl;
@@ -128,16 +130,18 @@ function_decl
             //Q: I don't know why the `param_list` is $5 instead of $4.
             symtab_entry *handle = $<s>5;
             do {
-                debug("\thandle: %s", handle);
+                debug("\tparam (name: %s, type: %d)", 
+                        handle->name, handle->type);
                 handle = handle->next;
                 n_param ++;
             } while (handle);
         }
         $2->n_param = n_param;
+        // attach the parameter list to the function id.
+        $2->next = $<s>5;
 
-        // warning: order matters! do not delete scope earlier or later.
+        // warning: order matters! do not `delete_scope` earlier or later.
         delete_scope(cur_scope--);
-        debug("function_decl: completed delete_scope");
         if (!insert_symbol($2, cur_scope)) {
             yyerror("variable %s is already declared", $2);
         } else {
@@ -145,6 +149,10 @@ function_decl
             debug("function_decl: symbol inserted.");
             debug("\t(name: %s, scope: %d, type: %d, kind: %d, n_param: %d)", 
                     s->name, s->scope, s->type, s->kind, s->n_param);
+            symtab_entry *handle = s;
+            while ((handle = handle->next)) {
+                debug("\tparameter %s: type %d", handle->name, handle->type);
+            }
         }
     }
 ;
@@ -161,7 +169,7 @@ param_list
     : param_var_decl param_list_tail {
         $1->next = $2 ? $2 : NULL;
         $$ = $1;
-        debug("param_list: %s %s", $1, $2);
+        debug("param_list: param_var_decl: %s, param_list_tail: %s", $1, $2);
     }
     | /* empty */ { $$ = NULL; }
 ; 
@@ -183,6 +191,7 @@ param_var_decl : param_type ID array_subscript
 {
     //Add id in $2 to symbol table with type and scope info
     $2->type = $<type_info>1;
+    $2->kind = PARAMETER;
     if (!insert_symbol($2, cur_scope)) {
         yyerror("variable %s is already declared", $2);
     } else {
@@ -492,7 +501,6 @@ var_decl    : type id_list
 
 id_list 
     : ID array_subscript id_tail {
-        debug("parser::id_list ID id_tail");
         if ($2) {
             $<s>1->kind = ARRAY;
             $<s>1->dim = $2->dim;
@@ -501,7 +509,6 @@ id_list
         $$ = $1;
     }
     | id_list MK_COMMA ID array_subscript id_tail {
-        debug("id_list: id_list, ID array_subscript id_tail");
         if ($4) {
             $3->kind = ARRAY;
             $3->dim = $4->dim;
@@ -661,22 +668,19 @@ struct_var_decl    : type id_list
 %%
 
 #include "lex.yy.c"
-main (argc, argv)
-int argc;
-char *argv[];
-  {
+int main (int argc, char *argv[]) {
     init_typetab();
     init_symtab();
-     	yyin = fopen(argv[1],"r");
-        yyout = fopen(argv[2], "w");
-        if (!yyout) {
-            fprintf(stderr, "output file is not specified. "
-                    "code will be emitted to <stdout>.\n");
-            yyout = stdout;
-        }
-     	yyparse();
-     	printf("%s\n", "Parsing completed. No errors found.");
-  } 
+    yyin = fopen(argv[1],"r");
+    yyout = fopen(argv[2], "w");
+    if (!yyout) {
+        fprintf(stderr, "output file is not specified. "
+                "code will be emitted to <stdout>.\n");
+        yyout = stdout;
+    }
+    yyparse();
+    printf("%s\n", "Parsing completed. No errors found.");
+} 
 
 
 yyerror (char *mesg)
@@ -685,3 +689,4 @@ yyerror (char *mesg)
   	printf("%s\n", mesg);
   	exit(1);
 }
+

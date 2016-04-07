@@ -162,7 +162,7 @@ void **ht_to_list(entry_t **h_table, int *size) {
     }
     *size = ind;
     for (int i=0; i<ind; i++) {
-        debug("hashtable.c::ht_to_list() id: %s", (char *) list[i]);
+        //debug("hashtable.c::ht_to_list() id: %s", (char *) list[i]);
     }
     return list;
 }

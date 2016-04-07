@@ -11,7 +11,7 @@ typedef struct symtab_entry{
     int scope;
     type_enum type;
     enum {
-        NONE, FUNCTION, ARRAY
+        NONE, FUNCTION, ARRAY, PARAMETER
     } kind;
     int n_param;                //< number of parameter (when FUNCTION)
     int dim;                    //< dimension

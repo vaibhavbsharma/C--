@@ -60,11 +60,13 @@ void delete_scope(int scope) {
         if (!entry) {
             continue;
         }
-        debug("\tentry: %s, scope: %d", entry->name, entry->scope);
-        if (entry->scope >= scope) {
-            debug("delete_scope(%d) deleting %s", entry->scope, entry->name);
-            h_remove(symtab, gen_key(entry->name, entry->scope));
+        if (entry->scope < scope || entry->kind == PARAMETER) {
+            /* delete only the symbols that are in current scope and 
+             * are not parameter */
+            continue;
         }
+        debug("delete_scope(%d) deleting %s", entry->scope, entry->name);
+        h_remove(symtab, gen_key(entry->name, entry->scope));
     }
     free(list);
 }

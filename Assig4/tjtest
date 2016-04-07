@@ -1,5 +1,13 @@
 int a, b, c;
 
+int foo(int f, int e) {
+    return f + e;
+}
+
+int bar(int h, float g) {
+    return h - g;
+}
+
 int main() {
     if (a) {
         write("hello parser");
