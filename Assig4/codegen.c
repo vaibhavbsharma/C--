@@ -1,28 +1,39 @@
 /** codegen.c 
  * Functions related to code generation
  * */
+#include "codegen.h"
+#include <stdlib.h>
 
-bool label_push(int n) {
-    if (index >= STACK_SIZ) {
-        debug("stack is full");
-    }
-    label_stack[++index] = n;
+intstack_t *s_init() {
+    intstack_t *s = (intstack_t*) malloc(sizeof(intstack_t));
+    s->index = -1;
+    return s;
 }
 
-int label_get() {
-    if (index < 0) {
+bool s_push(intstack_t *s, int n) {
+    if (s->index >= STACK_SIZ) {
+        debug("stack is full");
+        return false;
+    }
+    s->stack[++(s->index)] = n;
+    return true;
+}
+
+int s_get(intstack_t *s) {
+    if (s->index < 0) {
         debug("stack is empty");
         return -1;
     }
-    return label_stack[index];
+    return s->stack[s->index];
 }
 
-int label_pop() {
-    if (index < 0) {
+bool s_pop(intstack_t *s) {
+    if (s->index < 0) {
         // stack is empty
         debug("stack is empty");
-        return -1;
+        return false;
     }
-    return label_stack[index--];
+    (s->index)--;
+    return true;
 }
 

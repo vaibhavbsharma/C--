@@ -13,6 +13,11 @@
 static int linenumber = 1;
 int cur_scope = 0;
 
+// label number, for code generation
+int label_no = 0;
+
+intstack_t *label_stack;
+
 bool match_type(symtab_entry *s1, symtab_entry *s2) {
     if (s1->type != s2->type) {
         return false;
@@ -669,6 +674,7 @@ struct_var_decl    : type id_list
 
 #include "lex.yy.c"
 int main (int argc, char *argv[]) {
+    label_stack = s_init();
     init_typetab();
     init_symtab();
     yyin = fopen(argv[1],"r");
