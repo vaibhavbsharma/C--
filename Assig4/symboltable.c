@@ -20,7 +20,10 @@ bool insert_symbol(symtab_entry *s, int scope) {
     //debug("symboltable::insert_symbol(): scope %d, s->name %s", scope, s->name);
     /* use the scope as a prefix of the key in order to differentiate IDs 
      * with the same name in different scopes */
-  return h_insert(symtab, gen_key(s->name, scope), s);
+    // name the `place` to `_[identifier_name]`
+    strncpy(s->place, "_", 2);
+    strncat(s->place, s->name, ID_SIZ-2);
+    return h_insert(symtab, gen_key(s->name, scope), s);
 }
 
 symtab_entry *lookup_symtab(char *id_name, int scope) {

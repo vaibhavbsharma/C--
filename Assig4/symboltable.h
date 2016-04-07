@@ -15,8 +15,9 @@ typedef struct symtab_entry{
     } kind;
     int n_param;                //< number of parameter (when FUNCTION)
     int dim;                    //< dimension
-    struct symtab_entry* next;
+    struct symtab_entry *next;
     void *type_ptr;             //< points to mytype_t object if at all
+    char place[ID_SIZ];     //< memory location (label) where this symbol lies
 } symtab_entry;
 
 /** A global symbol table */

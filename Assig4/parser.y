@@ -8,6 +8,7 @@
 #include <string.h>
 #include "typetable.h"
 #include "symboltable.h"
+#include "codegen.h"
 
 static int linenumber = 1;
 int cur_scope = 0;
@@ -203,7 +204,6 @@ param_var_decl : param_type ID array_subscript
 }
 ;
 
-
 array_subscript 
     : MK_LB subscript_expr MK_RB array_subscript
     {
@@ -250,7 +250,7 @@ stmt    : block_stmt
 block_stmt  : MK_LBRACE {cur_scope++;} block MK_RBRACE {cur_scope--;}
 
 if_stmt     
-    : IF MK_LPAREN expr MK_RPAREN stmt else_tail 
+    : IF MK_LPAREN expr {} MK_RPAREN stmt else_tail 
     {
         emit("char *test = \"testing if it works\";");
         emit("char *test2 = \"some code with lucky integer: %d\";", 7);
