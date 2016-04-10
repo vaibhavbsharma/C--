@@ -41,4 +41,10 @@ int s_get(intstack_t *stack);
  * */
 bool s_pop(intstack_t *stack);
 
+
+/* Generate the prolog and epilogue for a function with name */
+void gen_func_prolog(char name[]);
+void gen_func_epilog(char name[]);
+
+
 #endif

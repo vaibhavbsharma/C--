@@ -1,7 +1,6 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
-#define DEBUG
 #include <stdio.h>
 
 typedef enum {

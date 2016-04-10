@@ -129,7 +129,8 @@ function_decl
         $2->type = $<type_info>1;
         $2->kind = FUNCTION;
         current_function = $<s>2;
-    } param_list MK_RPAREN MK_LBRACE block MK_RBRACE {
+ } param_list MK_RPAREN MK_LBRACE { gen_func_prolog($2->name); } block MK_RBRACE {
+      
         // count the number of parameters
         int n_param = 0;
         if ($5) {
@@ -160,6 +161,7 @@ function_decl
                 debug("\tparameter %s: type %d", handle->name, handle->type);
             }
         }
+	gen_func_epilog($2->name);
     }
 ;
 
@@ -702,12 +704,12 @@ int main (int argc, char *argv[]) {
     yyin = fopen(argv[1],"r");
     yyout = fopen(argv[2], "w");
     if (!yyout) {
-        fprintf(stderr, "output file is not specified. "
+        debug("output file is not specified. "
                 "code will be emitted to <stdout>.\n");
         yyout = stdout;
     }
     yyparse();
-    printf("%s\n", "Parsing completed. No errors found.");
+    debug("%s\n", "Parsing completed. No errors found.");
 } 
 
 
