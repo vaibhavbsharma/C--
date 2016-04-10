@@ -1,6 +1,6 @@
 TARGET = parser
 OBJECT = parser.tab.c parser.tab.o lex.yy.c hashtable.o typetable.o symboltable.o common.o codegen.o lex.yy.c
-CC = gcc -g
+CC = gcc -g -std=gnu99
 LEX = flex
 YACC = bison -v
 YACCFLAG = 
