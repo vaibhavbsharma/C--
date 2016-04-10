@@ -13,6 +13,10 @@
 static int linenumber = 1;
 int cur_scope = 0;
 
+// Keep track of how many local variables have been declared
+// and reset at the end of each function
+ int local_var_counter = 1;
+
 // label number, for code generation
 int label_no = 0;
 
@@ -162,6 +166,7 @@ function_decl
             }
         }
 	gen_func_epilog($2->name);
+	local_var_counter=1;
     }
 ;
 
@@ -322,6 +327,7 @@ assign_expr : lhs OP_ASSIGN assign_expr_tail
       }
     }
     $$=$1;
+    emit("\tsw %s, %s", $3->place, $1->place);
 }
 ;
 
@@ -449,9 +455,13 @@ expr    : lhs {}
   }
   $$=$1;
 }
-        | unop expr {$$=$2;}
-        | ICONST {$$=$1;}
-        | FCONST {$$=$1;}
+| unop expr {$$=$2;}
+| ICONST {
+  $$=$1;
+  emit("\tli $8, %s", $1->name);
+  strcpy($$->place,"$8");
+}
+| FCONST {$$=$1;}
 ;
 
 binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE | 
@@ -475,13 +485,17 @@ var_decl    : type id_list
             {
                 //Add id in $2 to symbol table with type and scope info
                 symtab_entry *handle = $2;
+		char stack_entry[ID_SIZ];
                 do {
                     handle->type = $<type_info>1;
                     if (!insert_symbol(handle, cur_scope)) {
                         yyerror("variable %s is already declared", $2);
                     } else {
                         symtab_entry *s = lookup_symtab(handle->name, cur_scope);
-                        debug("var_decl: type id_list symbol inserted. (name: %s, scope: %d, type: %d, kind: %d)", s->name, s->scope, s->type, s->kind);
+			sprintf(stack_entry,"-%d($fp)",local_var_counter*4);
+			strcpy(s->place,stack_entry);
+			local_var_counter++;
+                        debug("var_decl: type id_list symbol inserted. (name: %s, scope: %d, type: %d, kind: %d, place: %s)", s->name, s->scope, s->type, s->kind, s->place);
                     }
                 } while((handle = handle->next));
                 $2->type = $1;
