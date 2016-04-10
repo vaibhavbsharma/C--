@@ -51,6 +51,19 @@ symtab_entry *create_symbol(char *id_name, int scope) {
     return s;
 }
 
+symtab_entry *copy_symbol(symtab_entry *s) {
+    assert(strlen(s->name) < 257);
+    symtab_entry *s_ret = malloc(sizeof(symtab_entry));
+    memset(s_ret, 0, sizeof(symtab_entry));
+    strcpy(s_ret->name, s->name);
+    s_ret->type = s->type;
+    s_ret->scope = s->scope;
+    s_ret->next = s->next;
+    s_ret->type_ptr = s->type_ptr;
+    debug("symboltable::copy_symbol() id_name: %s, scope: %d", s_ret->name, s_ret->scope);
+    return s_ret;
+}
+
 void delete_scope(int scope) {
   int sz,i;
     // hasth table entries in a list, for a faster search

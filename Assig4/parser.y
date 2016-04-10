@@ -43,7 +43,7 @@ symtab_entry *current_function; // current function symbol
   symtab_entry *s;
   int const_int;
   double const_float;
-  char* str;
+  char str[10];
   type_enum type_info;
   struct_field *sf;
   mytype_t *type_obj;
@@ -55,6 +55,7 @@ symtab_entry *current_function; // current function symbol
 %type <s> param_var_decl param_list param_list_tail array_subscript subscript_expr
 %type <sf> struct_decl_list 
 %type <type_obj> struct_decl;
+%type <str> binop
 
 %token <s> ID
 %token <s> ICONST
@@ -77,19 +78,19 @@ symtab_entry *current_function; // current function symbol
 %token WRITE
 
 %token OP_ASSIGN  
-%token OP_OR   
-%token OP_AND  
-%token OP_NOT  
-%token OP_EQ   
-%token OP_NE   
-%token OP_GT   
-%token OP_LT   
-%token OP_GE   
-%token OP_LE   
-%token OP_PLUS 
-%token OP_MINUS        
-%token OP_TIMES        
-%token OP_DIVIDE       
+%token <str>  OP_OR   
+%token <str>  OP_AND  
+%token <str>  OP_NOT  
+%token <str>  OP_EQ   
+%token <str>  OP_NE   
+%token <str>  OP_GT   
+%token <str>  OP_LT   
+%token <str>  OP_GE   
+%token <str>  OP_LE   
+%token <str>  OP_PLUS 
+%token <str>  OP_MINUS        
+%token <str>  OP_TIMES        
+%token <str>  OP_DIVIDE       
 %token MK_LB 
 %token MK_RB 
 %token MK_LPAREN       
@@ -327,8 +328,8 @@ assign_expr : lhs OP_ASSIGN assign_expr_tail
       }
     }
     $$=$1;
-    emit("\tsw %s, %s", $3->place, $1->place);
-    maybe_mark_temp_reg_free($3->place);
+    emit("\tsw %s, %s # %s, %s", $3->place, $1->place, $3->name, $1->name);
+    mark_temp_reg_free($3->place);
 }
 ;
 
@@ -454,7 +455,9 @@ expr    : lhs {}
   if($1 -> type == STRUCT_TY || $3 -> type == STRUCT_TY) {
     yyerror("Invalid operands to binary operator");
   }
-  $$=$1;
+  /* At this point, it is not ok to return $$ as $1 because we want to update
+     $$->place but we do NOT want to update $1->place */
+  $$=copy_symbol($1);
   
   /* Code Generation */
   char reg1_str[3], reg2_str[3], reg_dest_str[3];
@@ -465,7 +468,7 @@ expr    : lhs {}
   else {
     reg1=get_free_temp_reg();
     sprintf(reg1_str,"$%d",reg1);
-    emit("\tlw %s, %s",reg1_str,$1->place);
+    emit("\tlw %s, %s # %s",reg1_str,$1->place,$1->name);
   }
  
   if(is_temp_reg($3->place)) {
@@ -474,23 +477,65 @@ expr    : lhs {}
   else {
     reg2=get_free_temp_reg();
     sprintf(reg2_str,"$%d",reg2);
-    emit("\tlw %s, %s",reg2_str,$3->place);
+    emit("\tlw %s, %s # %s", reg2_str, $3->place, $3->name);
   }
   
   int reg_dest = get_free_temp_reg();
   sprintf(reg_dest_str,"$%d",reg_dest);
-  emit("\tadd %s, %s, %s",reg_dest_str,reg1_str,reg2_str);
+
+  char op_str[5];
+  if($<str>2[0]=='-') {
+    strcpy(op_str,"sub");
+  }
+  else if($<str>2[0]=='+') {
+    strcpy(op_str,"add");
+  }
+  else if($<str>2[0]=='*') {
+    strcpy(op_str,"mul");
+  }
+  else if($<str>2[0]=='/') {
+    strcpy(op_str,"div");
+  }
+  else if(strcmp($<str>2,"&&")==0) {
+    strcpy(op_str,"and");
+  }
+  else if(strcmp($<str>2,'||')==0) {
+    strcpy(op_str,"or");
+  }
+  else if(strcmp($<str>2,'<')==0) {
+    strcpy(op_str,"slt");
+  }
+  else if(strcmp($<str>2,'>')==0) {
+    strcpy(op_str,"sgt");
+  }
+  else if(strcmp($<str>2,'<=')==0) {
+    strcpy(op_str,"sle");
+  }
+  else if(strcmp($<str>2,'>=')==0) {
+    strcpy(op_str,"sge");
+  }
+  else if(strcmp($<str>2,'==')==0) {
+    strcpy(op_str,"seq");
+  }
+  else if(strcmp($<str>2,'!=')==0) {
+    strcpy(op_str,"sne");
+  }
+  else  /* Fallback for now */ {
+    yyerror("operator not supported");
+  }
+
+  emit("\t%s %s, %s, %s",op_str,reg_dest_str,reg1_str,reg2_str);
   
   strcpy($$->place,reg_dest_str);
   
-  maybe_mark_temp_reg_free(reg1_str);
-  maybe_mark_temp_reg_free(reg2_str);
+  mark_temp_reg_free(reg1_str);
+  mark_temp_reg_free(reg2_str);
   
   /* If reg1_str is same as $1->place, this duplicates the free marking of the 
      temp register, but that should be ok.
      ditto for reg2_str*/
-  maybe_mark_temp_reg_free($1->place);
-  maybe_mark_temp_reg_free($3->place);
+  mark_temp_reg_free($1->place);
+  mark_temp_reg_free($3->place);
 }
 | unop expr {$$=$2;}
 | ICONST {
@@ -504,8 +549,19 @@ expr    : lhs {}
 | FCONST {$$=$1;}
 ;
 
-binop: OP_AND | OP_OR | OP_EQ | OP_NE | OP_LT | OP_GT | OP_LE | OP_GE | 
-       OP_PLUS | OP_MINUS | OP_TIMES | OP_DIVIDE
+binop: 
+OP_AND {strcpy($<str>$,$<str>1);}
+| OP_OR {strcpy($<str>$,$<str>1);}
+| OP_EQ {strcpy($<str>$,$<str>1);}
+| OP_NE {strcpy($<str>$,$<str>1);}
+| OP_LT {strcpy($<str>$,$<str>1);}
+| OP_GT {strcpy($<str>$,$<str>1);}
+| OP_LE {strcpy($<str>$,$<str>1);}
+| OP_GE {strcpy($<str>$,$<str>1);}
+| OP_PLUS {strcpy($<str>$,$<str>1);}
+| OP_MINUS {strcpy($<str>$,$<str>1);}
+| OP_TIMES {strcpy($<str>$,$<str>1);}
+| OP_DIVIDE {strcpy($<str>$,$<str>1);}
 ;
 
 unop: OP_NOT | OP_MINUS

@@ -91,13 +91,15 @@ int get_free_temp_reg() {
 }
 
 void mark_temp_reg_free(char *str) {
-  if(!is_temp_reg) debug("mark_temp_reg_free(): %s is not a temp register and cannot be marked as free",str);
-  temp_reg[str[1]-'8']=0;
-}
-
-void maybe_mark_temp_reg_free(char* str) {
-  if(is_temp_reg(str)) {
-    int reg=str[1]-'8';
+  if(!is_temp_reg(str)) 
+    debug("mark_temp_reg_free(): %s is not a temp register and cannot be marked as free",str);
+  else {
+    int reg;
+    if(str[1]>='8' && str[1]<='9') 
+      reg=str[1]-'8';
+    else {
+      reg=(str[1]-'0')*10+(str[2]-'0')-8;
+    }
     temp_reg[reg]=0;
   }
 }

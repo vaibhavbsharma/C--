@@ -51,12 +51,9 @@ void gen_func_epilog(char name[]);
  * returns -1 if all registers are currently being used */
 int get_free_temp_reg();
 
-/* Mark reg as free */
-void mark_temp_reg_free(char *);
-
 /* Check if argument str is pointing to a temporary register,
  * if it is, then mark that temp reg to free, else do nothing */
-void maybe_mark_temp_reg_free(char *str);
+void mark_temp_reg_free(char *);
 
 /* Check if argument str points to a temporary register */
 bool is_temp_reg(char *str);

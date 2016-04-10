@@ -122,20 +122,20 @@ error    .
         return ID; 
     }
     }
-{op_assign}     return OP_ASSIGN; 
-{op_and}        return OP_AND;
-{op_or}         return OP_OR;
-{op_not}        return OP_NOT;
-{op_eq}         return OP_EQ;
-{op_ne}         return OP_NE;
-{op_lt}         return OP_LT;
-{op_gt}         return OP_GT;
-{op_le}         return OP_LE;
-{op_ge}         return OP_GE;
-{op_plus}       return OP_PLUS;
-{op_minus}      return OP_MINUS;
-{op_times}      return OP_TIMES;
-{op_divide}     return OP_DIVIDE;
+{op_assign}     {strcpy(yylval.str, yytext); return OP_ASSIGN; }
+{op_and}        {strcpy(yylval.str, yytext); return OP_AND; }
+{op_or}         {strcpy(yylval.str, yytext); return OP_OR; }
+{op_not}        {strcpy(yylval.str, yytext); return OP_NOT; }
+{op_eq}         {strcpy(yylval.str, yytext); return OP_EQ; }
+{op_ne}         {strcpy(yylval.str, yytext); return OP_NE; }
+{op_lt}         {strcpy(yylval.str, yytext); return OP_LT; }
+{op_gt}         {strcpy(yylval.str, yytext); return OP_GT; }
+{op_le}         {strcpy(yylval.str, yytext); return OP_LE; }
+{op_ge}         {strcpy(yylval.str, yytext); return OP_GE; }
+{op_plus}       {strcpy(yylval.str, yytext); return OP_PLUS; }
+{op_minus}      {strcpy(yylval.str, yytext); return OP_MINUS; }
+{op_times}      {strcpy(yylval.str, yytext); return OP_TIMES; }
+{op_divide}     {strcpy(yylval.str, yytext); return OP_DIVIDE; }
 {i_constant}      {  
     //yylval.const_int = atoi(yytext); 
     symtab_entry *s = lookup_symtab(yytext, cur_scope);

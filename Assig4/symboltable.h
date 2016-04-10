@@ -34,6 +34,9 @@ void init_symtab();
 * */
 bool insert_symbol(symtab_entry *s, int scope);
 
+/* Copies a symtab_entry object */
+symtab_entry *copy_symbol(symtab_entry *s);
+
 /** Lookup ID in the symbol table, only in the current scope
 * @param id_name  identifier name
 * @param scope    the current scope to look for
