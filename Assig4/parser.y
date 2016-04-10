@@ -328,6 +328,7 @@ assign_expr : lhs OP_ASSIGN assign_expr_tail
     }
     $$=$1;
     emit("\tsw %s, %s", $3->place, $1->place);
+    maybe_mark_temp_reg_free($3->place);
 }
 ;
 
@@ -454,12 +455,51 @@ expr    : lhs {}
     yyerror("Invalid operands to binary operator");
   }
   $$=$1;
+  
+  /* Code Generation */
+  char reg1_str[3], reg2_str[3], reg_dest_str[3];
+  int reg1,reg2;
+  if(is_temp_reg($1->place)) {
+    strcpy(reg1_str,$1->place);
+  }
+  else {
+    reg1=get_free_temp_reg();
+    sprintf(reg1_str,"$%d",reg1);
+    emit("\tlw %s, %s",reg1_str,$1->place);
+  }
+ 
+  if(is_temp_reg($3->place)) {
+    strcpy(reg2_str,$3->place);
+  }
+  else {
+    reg2=get_free_temp_reg();
+    sprintf(reg2_str,"$%d",reg2);
+    emit("\tlw %s, %s",reg2_str,$3->place);
+  }
+  
+  int reg_dest = get_free_temp_reg();
+  sprintf(reg_dest_str,"$%d",reg_dest);
+  emit("\tadd %s, %s, %s",reg_dest_str,reg1_str,reg2_str);
+  
+  strcpy($$->place,reg_dest_str);
+  
+  maybe_mark_temp_reg_free(reg1_str);
+  maybe_mark_temp_reg_free(reg2_str);
+  
+  /* If reg1_str is same as $1->place, this duplicates the free marking of the 
+     temp register, but that should be ok.
+     ditto for reg2_str*/
+  maybe_mark_temp_reg_free($1->place);
+  maybe_mark_temp_reg_free($3->place);
 }
 | unop expr {$$=$2;}
 | ICONST {
   $$=$1;
-  emit("\tli $8, %s", $1->name);
-  strcpy($$->place,"$8");
+  int reg=get_free_temp_reg();
+  char reg_str[3];
+  sprintf(reg_str,"$%d",reg);
+  emit("\tli %s, %s",reg_str ,$1->name);
+  strcpy($$->place,reg_str);
 }
 | FCONST {$$=$1;}
 ;

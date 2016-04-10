@@ -4,6 +4,9 @@
 #include "codegen.h"
 #include <stdlib.h>
 
+/* Maintain a list of register slots marked as free/occupied */
+int temp_reg[8]={0};
+
 intstack_t *s_init() {
     intstack_t *s = (intstack_t*) malloc(sizeof(intstack_t));
     s->index = -1;
@@ -75,4 +78,34 @@ void gen_func_epilog(char name[]) {
   emit(".data");
   emit("\t_framesize_main: .word 36");
 
+}
+
+int get_free_temp_reg() {
+  for(int i=0;i<8;i++) {
+    if(temp_reg[i]==0) {
+      temp_reg[i]=1;
+      return i+8;
+    }
+  }
+  return -1;
+}
+
+void mark_temp_reg_free(char *str) {
+  if(!is_temp_reg) debug("mark_temp_reg_free(): %s is not a temp register and cannot be marked as free",str);
+  temp_reg[str[1]-'8']=0;
+}
+
+void maybe_mark_temp_reg_free(char* str) {
+  if(is_temp_reg(str)) {
+    int reg=str[1]-'8';
+    temp_reg[reg]=0;
+  }
+}
+
+bool is_temp_reg(char *str) {
+  return str[0]=='$';
+}
+
+bool get_temp_reg(char *str) {
+  return str[1]-'0';
 }

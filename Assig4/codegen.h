@@ -47,4 +47,21 @@ void gen_func_prolog(char name[]);
 void gen_func_epilog(char name[]);
 
 
+/* Get the first available register 
+ * returns -1 if all registers are currently being used */
+int get_free_temp_reg();
+
+/* Mark reg as free */
+void mark_temp_reg_free(char *);
+
+/* Check if argument str is pointing to a temporary register,
+ * if it is, then mark that temp reg to free, else do nothing */
+void maybe_mark_temp_reg_free(char *str);
+
+/* Check if argument str points to a temporary register */
+bool is_temp_reg(char *str);
+
+/* Return register number between 8 and 15(both inclusive) from 
+ * argument str */
+bool get_temp_reg(char *str);
 #endif
