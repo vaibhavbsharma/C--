@@ -506,7 +506,7 @@ expr    : lhs {}
   
   int reg_dest = get_free_temp_reg();
   sprintf(reg_dest_str,"$%d",reg_dest);
-
+  debug("binop = %s",$<str>2);
   char op_str[5];
   if($<str>2[0]=='-') {
     strcpy(op_str,"sub");
@@ -523,25 +523,25 @@ expr    : lhs {}
   else if(strcmp($<str>2,"&&")==0) {
     strcpy(op_str,"and");
   }
-  else if(strcmp($<str>2,'||')==0) {
+  else if(strcmp($<str>2,"||")==0) {
     strcpy(op_str,"or");
   }
-  else if(strcmp($<str>2,'<')==0) {
-    strcpy(op_str,"slt");
-  }
-  else if(strcmp($<str>2,'>')==0) {
-    strcpy(op_str,"sgt");
-  }
-  else if(strcmp($<str>2,'<=')==0) {
+  else if(strcmp($<str>2,"<=")==0) {
     strcpy(op_str,"sle");
   }
-  else if(strcmp($<str>2,'>=')==0) {
+  else if(strcmp($<str>2,">=")==0) {
     strcpy(op_str,"sge");
   }
-  else if(strcmp($<str>2,'==')==0) {
+  else if($<str>2[0]=='<') {
+    strcpy(op_str,"slt");
+  }
+  else if($<str>2[0]=='>') {
+    strcpy(op_str,"sgt");
+  }
+  else if(strcmp($<str>2,"==")==0) {
     strcpy(op_str,"seq");
   }
-  else if(strcmp($<str>2,'!=')==0) {
+  else if(strcmp($<str>2,"!=")==0) {
     strcpy(op_str,"sne");
   }
   else  /* Fallback for now */ {

@@ -104,9 +104,11 @@ int get_free_temp_reg() {
   for(int i=0;i<8;i++) {
     if(temp_reg[i]==0) {
       temp_reg[i]=1;
+      debug("get_free_temp_reg: returning free reg $%d",i+8);
       return i+8;
     }
   }
+  debug("get_free_temp_reg: no free registers");
   return -1;
 }
 
