@@ -32,11 +32,33 @@ void main() {
   write(a);
   write("\n"); */
   
-  int b,c;
+  /*int a,b,c,d;
   b=2;
+  d=4;
   if(b>2) {
     c=1024;
+    if(b>4) {
+      a=1;
+    }
+    else {
+      a=2;
+    }
   } else {
     c=2048;
+    if(b<4) {
+      a=3;
+    }
+    else {
+      a=4;
+    }
   }
+  write(c);
+  write("\n");
+  write(a);
+  write("\n"); */
+
+  int a;
+  a=read();
+  write(a);
+  write("\n");
 }

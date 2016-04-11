@@ -358,9 +358,16 @@ assign_expr : lhs OP_ASSIGN assign_expr_tail
 ;
 
 assign_expr_tail    : expr  {debug("lhs=expr");$$=$1;}
-        | READ MK_LPAREN MK_RPAREN {debug("lhs=read()");} 
-        | FREAD MK_LPAREN MK_RPAREN {debug("lhs=fread()");}
-        | function_call {debug("lhs=function_call");$$=$1;}
+| READ MK_LPAREN MK_RPAREN {
+  debug("lhs=read()");
+  emit("\tli $v0, 5");
+  emit("\tsyscall");
+  $$=create_symbol("read_syscall",0);
+  strcpy($$->place,"$v0");
+  $$->type=INT_TY;
+} 
+| FREAD MK_LPAREN MK_RPAREN {debug("lhs=fread()");}
+| function_call {debug("lhs=function_call");$$=$1;}
         ;
 
 function_call
