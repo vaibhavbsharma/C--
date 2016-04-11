@@ -18,7 +18,7 @@ void main() {
   c=4;
   a=b+c+8;*/
 
-  int a,b,c;
+  /*int a,b,c;
   int d,e;
   
   b = 2;
@@ -28,6 +28,15 @@ void main() {
   d = 2; 
   e = d*2 + 1;
   e = 200/e;
+  write("the answer for a = ");
   write(a);
-  write("\n");
+  write("\n"); */
+  
+  int b,c;
+  b=2;
+  if(b>2) {
+    c=1024;
+  } else {
+    c=2048;
+  }
 }
