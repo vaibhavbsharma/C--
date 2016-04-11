@@ -250,7 +250,7 @@ debug("parser::param_type STRUCT ID");
 
 stmt    : block_stmt
 | if_stmt
-| while_stmt MK_SEMICOLON
+| while_stmt 
 | for_stmt
 | assign_expr MK_SEMICOLON {debug("stmt: assign_expr");}
 | write_stmt MK_SEMICOLON 
