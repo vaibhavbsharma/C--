@@ -160,7 +160,7 @@ error    .
     return FCONST;
     }
 
-{s_const}       { return SCONST;}
+{s_const}       { strcpy(yylval.str, yytext); return SCONST;}
 {mk_lparen}     return MK_LPAREN;
 {mk_rparen}     { return MK_RPAREN; }
 {mk_lbrace}     { return MK_LBRACE; }

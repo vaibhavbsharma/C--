@@ -28,4 +28,6 @@ void main() {
   d = 2; 
   e = d*2 + 1;
   e = 200/e;
+  write(a);
+  write("\n");
 }

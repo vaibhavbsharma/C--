@@ -43,7 +43,7 @@ symtab_entry *current_function; // current function symbol
   symtab_entry *s;
   int const_int;
   double const_float;
-  char str[10];
+  char str[20];
   type_enum type_info;
   struct_field *sf;
   mytype_t *type_obj;
@@ -60,7 +60,7 @@ symtab_entry *current_function; // current function symbol
 %token <s> ID
 %token <s> ICONST
 %token <s> FCONST
-%token SCONST
+%token <str> SCONST
 %token <type_info> TYPEDEF_NAME
 %token <str> STRUCT_NAME
 %token <type_info> VOID
@@ -299,9 +299,33 @@ while_stmt  : WHILE MK_LPAREN expr MK_RPAREN stmt {debug("stmt: while(expr) stmt
 
 for_stmt    : FOR MK_LPAREN assign_expr MK_SEMICOLON expr MK_SEMICOLON assign_expr MK_RPAREN stmt 
 
-write_stmt  : WRITE MK_LPAREN SCONST MK_RPAREN {debug("stmt: write string constant called at %d", linenumber);}
+write_stmt  : WRITE MK_LPAREN SCONST MK_RPAREN {
+  debug("stmt: write string constant called at %d", linenumber);
+  char *sconst_label = push_string_label($<str>3);
+  emit("\tla $a0, %s",sconst_label);
+  emit("\tli $v0, 4");
+  emit("\tsyscall");
+  free(sconst_label);
+}
 
-write_lhs_stmt  : WRITE MK_LPAREN lhs MK_RPAREN {debug("stmt: write lhs called at %d", linenumber);}
+write_lhs_stmt  : WRITE MK_LPAREN lhs MK_RPAREN {
+  debug("stmt: write lhs called at %d", linenumber);
+  int reg;
+  char reg_str[3];
+  if(is_temp_reg($3->place)) {
+    strcpy(reg_str,$3->place);
+  }
+  else {
+    reg=get_free_temp_reg();
+    sprintf(reg_str,"$%d",reg);
+    emit("\tlw %s, %s # %s",reg_str,$3->place,$3->name);
+  }
+  emit("\tmove $a0, %s",reg_str);
+  mark_temp_reg_free(reg_str);
+  mark_temp_reg_free($3->place);
+  emit("\tli $v0, 1");
+  emit("\tsyscall");
+}
 
 return_stmt 
     : RETURN expr {

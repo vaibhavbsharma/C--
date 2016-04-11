@@ -13,8 +13,15 @@
 #include "common.h"
 #include <stdio.h>
 #include <stdbool.h>
-
+#include <string.h>
 #define STACK_SIZ 1000
+
+#define LABEL_SIZE 20
+
+typedef struct stringlabel_t {
+  char label[LABEL_SIZE];
+  char str[100];
+} stringlabel;
 
 typedef struct intstack_t {
     int stack[STACK_SIZ];
@@ -58,7 +65,5 @@ void mark_temp_reg_free(char *);
 /* Check if argument str points to a temporary register */
 bool is_temp_reg(char *str);
 
-/* Return register number between 8 and 15(both inclusive) from 
- * argument str */
-bool get_temp_reg(char *str);
+
 #endif
