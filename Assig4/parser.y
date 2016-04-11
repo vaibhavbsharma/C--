@@ -295,7 +295,20 @@ else_part
     | /* empty */ 
 ;
 
-while_stmt  : WHILE MK_LPAREN expr MK_RPAREN stmt {debug("stmt: while(expr) stmt");}
+while_stmt  : WHILE MK_LPAREN { 
+  /*gen_head*/ 
+  emit("_Test%d: ",++label_no); 
+  s_push(label_stack, label_no);
+} expr { 
+  /*gen_test*/ 
+  emit("\tbeqz %s, _Lexit%d",$<s>3->place, label_no);
+} MK_RPAREN stmt {
+  debug("stmt: while(expr) stmt");
+  /* gen_label */
+  emit("\tj _Test%d", s_get(label_stack));
+  emit("_Lexit%d: ", s_get(label_stack));
+  s_pop(label_stack);
+}
 
 for_stmt    : FOR MK_LPAREN assign_expr MK_SEMICOLON expr MK_SEMICOLON assign_expr MK_RPAREN stmt 
 

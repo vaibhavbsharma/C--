@@ -57,8 +57,17 @@ void main() {
   write(a);
   write("\n"); */
 
-  int a;
+  /*int a;
   a=read();
   write(a);
-  write("\n");
+  write("\n");*/
+
+  int a,b,c;
+  b=4;
+  c=5;
+  a=1;
+  while(b<c) {
+    write(a);
+    b=read();
+  }
 }
