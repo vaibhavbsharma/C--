@@ -104,7 +104,7 @@ int get_free_temp_reg() {
   for(int i=0;i<8;i++) {
     if(temp_reg[i]==0) {
       temp_reg[i]=1;
-      debug("get_free_temp_reg: returning free reg $%d",i+8);
+      //debug("get_free_temp_reg: returning free reg $%d",i+8);
       return i+8;
     }
   }
@@ -116,16 +116,16 @@ void mark_temp_reg_free(char *str) {
   if(!is_temp_reg(str)) 
     debug("mark_temp_reg_free(): %s is not a temp register and cannot be marked as free",str);
   else {
-    debug("mark_temp_reg_free(): marking %s as free",str);
+    //debug("mark_temp_reg_free(): marking %s as free",str);
     int reg;
     if(str[1]>='8' && str[1]<='9') 
       reg=str[1]-'8';
     else {
       reg=(str[1]-'0')*10+(str[2]-'0')-8;
     }
-    debug("mark_temp_reg_free(): got internal reg %d",reg);
+    //debug("mark_temp_reg_free(): got internal reg %d",reg);
     temp_reg[reg]=0;
-    debug("mark_temp_reg_free(): marked internal reg %d as free",reg);
+    //debug("mark_temp_reg_free(): marked internal reg %d as free",reg);
   }
 }
 

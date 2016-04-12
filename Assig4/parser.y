@@ -23,6 +23,8 @@ int label_no = 0;
 intstack_t *label_stack;
 
 bool match_type(symtab_entry *s1, symtab_entry *s2) {
+  if(!s1) debug("match_type: s1 is NULL, panic!");
+  if(!s2) debug("match_type: s2 is NULL, panic!");
     if (s1->type != s2->type) {
         return false;
     } else {
@@ -50,7 +52,8 @@ symtab_entry *current_function; // current function symbol
 }
 
 %type <type_info> param_type type  
-%type <s> var_decl id_list id_tail expr assign_expr_tail lhs assign_expr struct_var_decl
+%type <s> var_decl id_list id_tail expr assign_expr_tail assign_expr struct_var_decl
+%type <s> lhs
 %type <s> function_call param call_param_list call_param_list_tail
 %type <s> param_var_decl param_list param_list_tail array_subscript subscript_expr
 %type <sf> struct_decl_list 
@@ -171,7 +174,7 @@ function_decl
     }
 ;
 
-block: decl_list stmt_list  {debug("parser::block decl_list stmt_list");}
+block:   decl_list stmt_list  {debug("parser::block decl_list stmt_list");} 
 |
 ;
 
@@ -252,7 +255,7 @@ stmt    : block_stmt
 | if_stmt
 | while_stmt 
 | for_stmt
-| assign_expr MK_SEMICOLON {debug("stmt: assign_expr");}
+|  assign_expr MK_SEMICOLON {debug("stmt: assign_expr");} 
 | write_stmt MK_SEMICOLON 
 | write_lhs_stmt MK_SEMICOLON 
 | return_stmt MK_SEMICOLON
@@ -295,15 +298,16 @@ else_part
     | /* empty */ 
 ;
 
-while_stmt  : WHILE MK_LPAREN { 
+while_stmt  : 
+WHILE MK_LPAREN { 
   /*gen_head*/ 
+  debug("stmt: while(expr) stmt");
   emit("_Test%d: ",++label_no); 
   s_push(label_stack, label_no);
 } expr { 
   /*gen_test*/ 
-  emit("\tbeqz %s, _Lexit%d",$<s>3->place, label_no);
+  emit("\tbeqz %s, _Lexit%d #%s",$<s>4->place, label_no, $<s>4->name);
 } MK_RPAREN stmt {
-  debug("stmt: while(expr) stmt");
   /* gen_label */
   emit("\tj _Test%d", s_get(label_stack));
   emit("_Lexit%d: ", s_get(label_stack));
@@ -354,23 +358,26 @@ return_stmt
         $<s>$ = $2;
     }
 
-assign_expr : lhs OP_ASSIGN assign_expr_tail 
+assign_expr :  lhs OP_ASSIGN assign_expr_tail 
 {
     if (!match_type($<s>1, $<s>3)  
-     && !($1->type==FLOAT_TY && $3->type==INT_TY) )
+     && !($<s>1->type==FLOAT_TY && $<s>3->type==INT_TY) )
         yyerror("type expression mismatch with assignment (=) ");
-    if($1->type == STRUCT_TY && $3->type == STRUCT_TY) {
-      if($1->type_ptr != $3->type_ptr) {
+    if($<s>1->type == STRUCT_TY && $<s>3->type == STRUCT_TY) {
+      if($<s>1->type_ptr != $<s>3->type_ptr) {
 	yyerror("Incompatible type");
       }
     }
-    $$=$1;
-    emit("\tsw %s, %s # %s, %s", $3->place, $1->place, $3->name, $1->name);
-    mark_temp_reg_free($3->place);
+    $$=$<s>1;
+    emit("\tsw %s, %s # %s, %s", $<s>3->place, $<s>1->place, $<s>3->name, $<s>1->name);
+    mark_temp_reg_free($<s>3->place);
 }
 ;
 
-assign_expr_tail    : expr  {debug("lhs=expr");$$=$1;}
+assign_expr_tail    : expr  {
+  debug("assign_expr_tail = expr %s", $<s>1->name);
+  $$=$1;
+}
 | READ MK_LPAREN MK_RPAREN {
   debug("lhs=read()");
   emit("\tli $v0, 5");
@@ -441,17 +448,20 @@ call_param_list_tail
 
 param : lhs | ICONST | FCONST;
 
-lhs: ID array_subscript MK_DOT ID {
+lhs:  ID array_subscript MK_DOT ID {
+  debug("lhs: ID [] . ID");
   symtab_entry *s = lookup_symtab_prevscope($<s>1->name,cur_scope);
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
 }
-| ID array_subscript{
+| ID array_subscript {
+  debug("lhs: ID []");
   symtab_entry *s = lookup_symtab_prevscope($<s>1->name,cur_scope);
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
 }
 | ID MK_DOT ID {
+  debug("lhs: ID . ID");
   symtab_entry *s = lookup_symtab_prevscope($<s>1->name,cur_scope);
   if(!s) yyerror("ID undeclared");
   else $$=s;//TODO maybe free the symtab_entry in $1 ?
@@ -478,24 +488,39 @@ lhs: ID array_subscript MK_DOT ID {
   }
 }
 | ID {
-  symtab_entry *s = lookup_symtab($<s>1->name,cur_scope);
-  if(!s) s=lookup_symtab_prevscope($<s>1->name,0);
-  if(!s) yyerror("lhs: ID ID undeclared");
-  else $$=s;//TODO maybe free the symtab_entry in $1 ?
+  debug("lhs: ID entering with $1 = %p", $<s>1);
+  debug("lhs: ID entering with $1->type = %d", $<s>1->type);
+  symtab_entry *s1 = lookup_symtab($<s>1->name,cur_scope);
+  if(s1==$<s>1) debug("lhs: ID the pointers are equal");
+  if(s1 == NULL) debug("lhs: ID lookup_symtab failed");
+  else {
+    debug("lhs: ID s = %p",s1);
+    debug("lhs: ID %s ", s1->name);
+    debug("lhs: ID %d ", s1->type);
+  }
+  fflush(stdout);
+  if(!s1) {
+    s1=lookup_symtab_prevscope($<s>1->name,0);
+  }
+  if(!s1) yyerror("lhs: ID ID undeclared");
+  else $<s>$=s1;
+  fflush(stdout);
+  debug("lhs: ID %s %d", $<s>$->name, $<s>$->type);
 }
 ;
 
-expr    : lhs {}
-        | MK_LPAREN expr MK_RPAREN {}
-        | expr binop expr 
+expr    :  lhs {debug("expr: lhs");  $$=$<s>1;}
+| MK_LPAREN expr MK_RPAREN {debug("expr: ( expr ) ");}
+| expr binop expr 
 {
   debug("expr: expr binop expr");
-  if(($1->type != $3->type) && !($1->type==INT_TY && $3->type==FLOAT_TY)
-     && !($1->type==FLOAT_TY && $3->type==INT_TY)) {
+  if(($<s>1->type != $<s>3->type) && !($<s>1->type==INT_TY && $<s>3->type==FLOAT_TY)
+     && !($<s>1->type==FLOAT_TY && $<s>3->type==INT_TY)) {
     yyerror("type expression mismatch with binary operator");
     //TODO: get these %s's to work
     //yyerror("%s and %s type expression mismatch",$1,$3);
   }
+  debug("expr: expr binop expr after type check");
   if($1 -> type == STRUCT_TY || $3 -> type == STRUCT_TY) {
     yyerror("Invalid operands to binary operator");
   }
@@ -580,10 +605,11 @@ expr    : lhs {}
      ditto for reg2_str*/
   mark_temp_reg_free($1->place);
   mark_temp_reg_free($3->place);
+  debug("expr binop expr returning %s",$$->place);
 }
 | unop expr {$$=$2;}
 | ICONST {
-  $$=$1;
+  $<s>$=$<s>1;
   int reg=get_free_temp_reg();
   char reg_str[3];
   sprintf(reg_str,"$%d",reg);
@@ -635,7 +661,7 @@ var_decl    : type id_list
 			sprintf(stack_entry,"-%d($fp)",local_var_counter*4);
 			strcpy(s->place,stack_entry);
 			local_var_counter++;
-                        debug("var_decl: type id_list symbol inserted. (name: %s, scope: %d, type: %d, kind: %d, place: %s)", s->name, s->scope, s->type, s->kind, s->place);
+                        debug("var_decl: type id_list symbol inserted. (address: %p, name: %s, scope: %d, type: %d, kind: %d, place: %s)", s, s->name, s->scope, s->type, s->kind, s->place);
                     }
                 } while((handle = handle->next));
                 $2->type = $1;

@@ -27,7 +27,9 @@ bool insert_symbol(symtab_entry *s, int scope) {
 }
 
 symtab_entry *lookup_symtab(char *id_name, int scope) {
-    return ((symtab_entry *) h_get(symtab, gen_key(id_name, scope)));
+  debug("lookup_symtab: id_name = %s scope = %d", id_name, scope);
+  symtab_entry *ret = ((symtab_entry *) h_get(symtab, gen_key(id_name, scope))); 
+  return ret;
 }
 
 symtab_entry *lookup_symtab_prevscope(char *id_name, int scope) {
@@ -52,6 +54,7 @@ symtab_entry *create_symbol(char *id_name, int scope) {
 }
 
 symtab_entry *copy_symbol(symtab_entry *s) {
+  debug("copy_symbol(): entering");
     assert(strlen(s->name) < 257);
     symtab_entry *s_ret = malloc(sizeof(symtab_entry));
     memset(s_ret, 0, sizeof(symtab_entry));

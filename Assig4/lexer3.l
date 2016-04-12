@@ -99,9 +99,9 @@ error    .
         yylval.s = create_symbol(yytext, cur_scope);
     } else  {
         yylval.s = s;
-        //debug("lexer::ID ID \"%s\" already exists", yytext);
+        debug("lexer::ID ID \"%s\" already exists at %p with type %d", yytext, s, s->type);
     }
-    //debug("ID yytext: %s, yyval.s->name: %s", yytext, yylval.s->name);
+    debug("ID yytext: %s, yylval.s->name: %s, yylval.s->type: %d", yytext, yylval.s->name, yylval.s->type);
 
     if (is_type_exists(yytext)) {
         type_enum tmp_type = get_type(yytext);
@@ -144,6 +144,7 @@ error    .
     } else  {
         yylval.s = s;
     }
+    debug("ID yytext: %s, yylval.s->name: %s, yylval.s->type: %d", yytext, yylval.s->name, yylval.s->type);
     yylval.s->type = INT_TY;
     return ICONST;
 }
