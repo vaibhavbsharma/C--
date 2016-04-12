@@ -45,7 +45,7 @@ symtab_entry *current_function; // current function symbol
   symtab_entry *s;
   int const_int;
   double const_float;
-  char str[20];
+  char str[100];
   type_enum type_info;
   struct_field *sf;
   mytype_t *type_obj;
@@ -259,6 +259,7 @@ stmt    : block_stmt
 | write_stmt MK_SEMICOLON 
 | write_lhs_stmt MK_SEMICOLON 
 | return_stmt MK_SEMICOLON
+| function_call MK_SEMICOLON
 | error { debug("Error in stmt production"); }
 /* other C-- statements */
 ;
@@ -355,6 +356,19 @@ return_stmt
                     current_function->name, current_function->type, $2->type);
             yyerror("Incompatible return type.");
         }
+	int reg;
+	char reg_str[3];
+	if(!is_temp_reg($<s>2->place)) {
+	  reg=get_free_temp_reg();
+	  sprintf(reg_str,"$%d",reg);
+	  emit("\tlw %s, %s # %s",reg_str,$2->place,$2->name);
+	}
+	else {
+	  strcpy(reg_str,$<s>2->place);
+	}
+	emit("\tmove $v0, %s",reg_str);
+	mark_temp_reg_free($<s>2->place);
+	mark_temp_reg_free(reg_str);
         $<s>$ = $2;
     }
 
@@ -369,8 +383,19 @@ assign_expr :  lhs OP_ASSIGN assign_expr_tail
       }
     }
     $$=$<s>1;
-    emit("\tsw %s, %s # %s, %s", $<s>3->place, $<s>1->place, $<s>3->name, $<s>1->name);
+    int reg;
+    char reg_str[3];
+    if(!is_temp_reg($<s>3->place)) {
+      reg=get_free_temp_reg();
+      sprintf(reg_str,"$%d",reg);
+      emit("\tlw %s, %s # %s",reg_str,$3->place,$3->name);
+    }
+    else {
+      strcpy(reg_str,$<s>3->place);
+    }
+    emit("\tsw %s, %s # %s, %s", reg_str, $<s>1->place, $<s>3->name, $<s>1->name);
     mark_temp_reg_free($<s>3->place);
+    mark_temp_reg_free(reg_str);
 }
 ;
 
@@ -395,12 +420,14 @@ function_call
     {
         debug("function_call : ID ( call_param_lilst )");
         symtab_entry *s = lookup_symtab($<s>1->name,0);
-        if (!s) { 
+        //The strcmp comparison allows recursive functions
+	//but prevents arg counting check on recursive functions
+	if (!s && strcmp($1->name, current_function->name)!=0) { 
             yyerror("ID undeclared");
         } else {
             $$ = s; //TODO maybe free the symtab_entry in $1 ?
         }
-        if ($3) {
+        if ($3 && s!=NULL) {
             /* check if the number of arguments matches */
             int cnt = 1;
             symtab_entry *handle = $<s>3;
@@ -415,6 +442,15 @@ function_call
                 yyerror("too few arguments to function (function)");
             }
         }
+	emit("\taddi $sp, $sp, -4");
+	emit("\tjal %s",$<s>1->name);
+	emit("\taddi $sp, $sp, 4");
+	$$=$1;
+	if(!s)
+	  $$->type = current_function->type;
+	else
+	  $$->type = s->type;
+	strcpy($$->place,"$v0");
     }
 ;
 
@@ -510,7 +546,7 @@ lhs:  ID array_subscript MK_DOT ID {
 ;
 
 expr    :  lhs {debug("expr: lhs");  $$=$<s>1;}
-| MK_LPAREN expr MK_RPAREN {debug("expr: ( expr ) ");}
+| MK_LPAREN expr MK_RPAREN {debug("expr: ( expr ) "); $$=$<s>2;}
 | expr binop expr 
 {
   debug("expr: expr binop expr");
@@ -617,6 +653,7 @@ expr    :  lhs {debug("expr: lhs");  $$=$<s>1;}
   strcpy($$->place,reg_str);
 }
 | FCONST {$$=$1;}
+| function_call {debug("expr: function_call");$$=$1;}
 ;
 
 binop: 
@@ -658,9 +695,15 @@ var_decl    : type id_list
                         yyerror("variable %s is already declared", $2);
                     } else {
                         symtab_entry *s = lookup_symtab(handle->name, cur_scope);
-			sprintf(stack_entry,"-%d($fp)",local_var_counter*4);
+			if(cur_scope>0) {
+			  sprintf(stack_entry,"-%d($fp)",local_var_counter*4);
+			  local_var_counter++;
+			}
+			else {
+			  sprintf(stack_entry,"____%s",s->name);
+			  push_string_label(stack_entry);
+			}
 			strcpy(s->place,stack_entry);
-			local_var_counter++;
                         debug("var_decl: type id_list symbol inserted. (address: %p, name: %s, scope: %d, type: %d, kind: %d, place: %s)", s, s->name, s->scope, s->type, s->kind, s->place);
                     }
                 } while((handle = handle->next));

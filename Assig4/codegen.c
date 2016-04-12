@@ -19,8 +19,16 @@ char *push_string_label(char *str) {
 }
 
 void gen_string_labels() {
-  for (int i=0;i<sconst_label_counter; i++)
-    emit("%s: .asciiz %s",slabel_arr[i].label, slabel_arr[i].str);
+  for (int i=0;i<sconst_label_counter; i++) {
+    if(slabel_arr[i].str[0]=='_' &&
+       slabel_arr[i].str[1]=='_' &&
+       slabel_arr[i].str[2]=='_' &&
+       slabel_arr[i].str[3]=='_') {
+      emit("%s: .word 0",slabel_arr[i].str);
+    } else {
+      emit("%s: .asciiz %s",slabel_arr[i].label, slabel_arr[i].str); 
+    }
+  }
   sconst_label_counter=0;
 }
 
@@ -62,12 +70,12 @@ bool s_pop(intstack_t *s) {
 
 void gen_func_prolog(char name[]) {
   emit(".text");
-  emit("main:");
+  emit("%s:", name);
   emit("\tsw $ra, 0($sp)");
   emit("\tsw $fp, -4($sp)");
   emit("\tadd $fp, $sp, -4");
   emit("\tadd $sp, $sp, -8");
-  emit("\tlw $2, _framesize_main");
+  emit("\tlw $2, _framesize_%s", name);
   emit("\tsub $sp, $sp, $2");
   emit("\tsw $8, 32($sp)");
   emit("\tsw $9, 28($sp)");
@@ -77,11 +85,11 @@ void gen_func_prolog(char name[]) {
   emit("\tsw $13, 12($sp)");
   emit("\tsw $14, 8($sp)");
   emit("\tsw $15, 4($sp)");
-  emit("_begin_main:");
+  emit("_begin_%s:", name);
 }
 
 void gen_func_epilog(char name[]) {
-  emit("_end_main:");
+  emit("_end_%s:", name);
   emit("\tlw $8, 32($sp)");
   emit("\tlw $9, 28($sp)");
   emit("\tlw $10, 24($sp)");
@@ -93,10 +101,16 @@ void gen_func_epilog(char name[]) {
   emit("\tlw $ra, 4($fp)");
   emit("\tadd $sp, $fp, 4");
   emit("\tlw $fp, 0($fp)");
-  emit("\tli $v0, 10");
-  emit("\tsyscall");
+  if(strcmp(name,"main")==0) {
+    emit("\tli $v0, 10");
+    emit("\tsyscall");
+  } else {
+    emit("\tjr $ra");
+  }
   emit(".data");
-  emit("\t_framesize_main: .word 36");
+  int word_size=32;
+  if(strcmp(name,"main")==0) word_size=36;
+  emit("\t_framesize_%s: .word %d",name, word_size);
   gen_string_labels();
 }
 
