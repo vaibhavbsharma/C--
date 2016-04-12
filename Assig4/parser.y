@@ -565,6 +565,7 @@ expr    :  lhs {debug("expr: lhs");  $$=$<s>1;}
   $$=copy_symbol($1);
   
   /* Code Generation */
+  emit("\t#%s %s %s",$1->name, $2, $3->name);
   char reg1_str[3], reg2_str[3], reg_dest_str[3];
   int reg1,reg2;
   if(is_temp_reg($1->place)) {
