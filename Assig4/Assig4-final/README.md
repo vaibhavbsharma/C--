@@ -1,0 +1,42 @@
+Programming Assignment 4
+========================
+
+CSCI 5161, Spring 2016  
+Tuesday, April 12, 2016  
+
+Members
+-------
+
+Vaibhav Sharma <vaibhav@umn.edu>  
+Taejoon Byun <taejoon@umn.edu>  
+
+Directory Structure
+-------------------
+
+`README.md`: this file  
+`Makefile`: make file
+`lexer3.l`: lexer rules  
+`parser.y`: parsing grammar  
+`common.h`: a common header file  
+`hashtable.h`, `hashtable.c`: contains the hash table implementation  
+`symboltable.h`, `symboltable.c`: contains the symbol table implementation  
+`typetable.h`, `typetable.c`: keeps a lookup dictionary for user defined types   
+`codegen.h`, `codegen.c`: contains helper functions required for code generation along with a stack implementation required to keep track of labels  
+
+C-- code generation 
+--------------------------------------------------------------
+
+The production rules were adapted from our type checking programming assignment #3 submission. Code generation for expressions was straightforward and for control flow altering C-- statements (if-else, while) was adapted from the code generation steps mentioned in the lecture slides. Stack implementation was used to handle labels. String constants and global variables were kept in a global array in codegen.c and dumped at the end of every function declaration after each function epilogue. Code generation for the read and write system calls was done as mentioned in the assignment description.
+
+What works, what doesnt
+--------------------------------------------------------------
+Our parser generates correct MIPS assembly code for all 3 test case files(test-1.c, test-2.c, test-3.c) provided by the TA. Execution behavior of our parser for these 3 test files matches that of the TA-provided parser binary. Unfortunately our production rules dont handle operator precedence correctly which leads to the output of our parser-generated code for test-1.c to be different than that of the TA's. However, it is our understanding that generation of a correct parsing tree is not the objective of this assignment.
+Most features not supported by the TA-provided parser binary are also not supported by our parser (parameter passing for function calls, arrays, structures, for loops). We have found that our parser is better than TA-provided parser binary at recognizing which temporary registers are free to use and therefore, can use lesser temporary registers during code generation.
+Finally, while we did generate some useful comments in our assembly code which correspond to C-- code, we did not generate complete C-- statements as commented assembly code. Please note that the TA-provided parser binary does not generate complete C-- statements in the assembly code too.
+
+Note
+----
+
+Please compile with `DEBUG` flag (or `#define DEBUG` in `common.h`) to 
+increase verbosity. The debug statements are not meant to be comments for the assembly file.
+
