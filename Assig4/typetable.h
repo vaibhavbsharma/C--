@@ -70,10 +70,19 @@ typetab_entry *insert_field(char *struct_name, char *field_name,
 /** @return true if type exists*/
 bool is_type_exists(char* type);
 
+//TODO: ??
 //Should be called only if is_type_exists returns true for the given type
 //returns INT_TY by default in case the passed type argument was not 
 //found in the type table
 type_enum get_type(char *type); 
+
+/** Retrieve the type of a certain member in a structure 
+ * @param structure     the name of the structure wherein the field belongs
+ * @param field         the name of the field
+ * @return              The type of the field, or ERROR_TY if error.
+ * */
+type_enum get_field_type(char *structure, char* field);
+
 
 //TODO: refactor
 typetab_entry *get_type_obj(char *);

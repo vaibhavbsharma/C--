@@ -11,7 +11,7 @@ typedef struct symtab_entry{
     int scope;
     type_enum type;
     enum {
-        NONE, FUNCTION, ARRAY, STRUCTURE, FIELD
+        NONE, FUNCTION, ARRAY, STRUCTURE
     } kind;
     /* if array */
     int n_param;                //< number of parameter (when FUNCTION)

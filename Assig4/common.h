@@ -5,7 +5,7 @@
 
 typedef enum {
   VOID_TY, INT_TY, FLOAT_TY, TYPEDEF_TY, STRUCT_TY, UNION_TY, 
-  ARR_INT_TY, ARR_FLOAT_TY
+  ARR_INT_TY, ARR_FLOAT_TY, ERROR_TY
 } type_enum;
 
 /** a pseudo-itoa that converts an integer to string 

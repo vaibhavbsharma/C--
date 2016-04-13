@@ -1,5 +1,19 @@
 #include "typetable.h"
 
+/** A private function to retrieve a structure type from the type table and 
+ * does an appropriate error handling for each error case. */
+typetab_entry *get_structure(char *structure) {
+    typetab_entry *struct_entry = h_get(typetab, struct_name);
+    if (!struct_entry) {
+        debug("get_structure::ERROR: invalid structure name %s", struct_name);
+        return NULL;
+    }
+    if (struct_entry->kind != STRUCT_T) {
+        debug("get_structure::ERROR: %s is not a structure", struct_name);
+        return NULL;
+    }
+    return struct_entry;
+}
 
 typetab_entry *insert_typedef(char *type_name, type_enum _t) {
     typetab_entry *t = malloc(sizeof(typetab_entry));
@@ -35,13 +49,8 @@ typetab_entry *insert_struct(char *struct_name) {
 
 typetab_entry *insert_field(char *struct_name, char *field_name, 
         type_enum field_type) {
-    typetab_entry *struct_entry = h_get(typetab, struct_name);
+    typetab_entry *struct_entry = get_structure(struct_name);
     if (!struct_entry) {
-        debug("insert_field::ERROR: invalid structure name %s", struct_name);
-        return NULL;
-    }
-    if (struct_entry->kind != STRUCT_T) {
-        debug("insert_field::ERROR: %s is not a structure", struct_name);
         return NULL;
     }
     // create a field
@@ -63,7 +72,7 @@ typetab_entry *insert_field(char *struct_name, char *field_name,
         }
     }
     handle->next = t;   // attach
-
+    // do not insert the field itself to the type table.
     return t;
 }
 
@@ -79,11 +88,23 @@ type_enum get_type(char *type) {
   if (t!=NULL) {
     debug("get_type %s has type (%d)\n",type,t->type);
     return t->type;
-  }
-  else {
+  } else {
     debug("get_type %s returning default type\n", type);
     return INT_TY;
   }
+}
+
+type_enum get_field_type(char *structure, char *field) {
+    typetab_entry *handle = get_structure(structure);
+    if (!handle) {
+        return ERROR_TY;
+    }
+    while (handle->next) {
+        if (handle->kind == FILED_T && strcmp(handle->name, field) == 0) {
+            return handle->type;
+        }
+    }
+    return ERROR_TY;
 }
   
 void init_typetab() {
@@ -111,3 +132,4 @@ typetab_entry *get_type_obj(char *type ){
   }
   return t;
 }
+
