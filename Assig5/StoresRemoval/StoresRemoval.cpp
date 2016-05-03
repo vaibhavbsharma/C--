@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ADT/Statistic.h"
-#include "llvm/IR/Function.h"
+#include "llvm/IR/BasicBlock.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
@@ -24,11 +24,11 @@ STATISTIC(StoresRemovalCounter, "Counts number of functions greeted");
 
 namespace {
   // StoresRemoval - The first implementation, without getAnalysisUsage.
-  struct StoresRemoval : public FunctionPass {
+  struct StoresRemoval : public BasicBlockPass {
     static char ID; // Pass identification, replacement for typeid
-    StoresRemoval() : FunctionPass(ID) {}
+    StoresRemoval() : BasicBlockPass(ID) {}
 
-    bool runOnFunction(Function &F) override {
+    bool runOnBasicBlock(BasicBlock &F) override {
       ++StoresRemovalCounter;
       errs() << "MyStoresRemoval: ";
       errs().write_escaped(F.getName()) << '\n';
@@ -42,11 +42,11 @@ static RegisterPass<StoresRemoval> X("storesremoval", "StoresRemoval World Pass"
 
 namespace {
   // StoresRemoval2 - The second implementation with getAnalysisUsage implemented.
-  struct StoresRemoval2 : public FunctionPass {
+  struct StoresRemoval2 : public BasicBlockPass {
     static char ID; // Pass identification, replacement for typeid
-    StoresRemoval2() : FunctionPass(ID) {}
+    StoresRemoval2() : BasicBlockPass(ID) {}
 
-    bool runOnFunction(Function &F) override {
+    bool runOnBasicBlock(BasicBlock &F) override {
       ++StoresRemovalCounter;
       errs() << "StoresRemoval: ";
       errs().write_escaped(F.getName()) << '\n';
