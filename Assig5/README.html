@@ -1,0 +1,37 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Untitled Document.md</title><style></style></head><body id="preview">
+<h1><a id="Programming_Assignment_5_0"></a>Programming Assignment 5</h1>
+<p>CSCI 5161, Spring 2016<br>
+Wednesday, May 4, 2016</p>
+<h2><a id="Members_6"></a>Members</h2>
+<p>Vaibhav Sharma <a href="mailto:vaibhav@umn.edu">vaibhav@umn.edu</a><br>
+Taejoon Byun <a href="mailto:taejoon@umn.edu">taejoon@umn.edu</a></p>
+<h2><a id="Directory_Structure_12"></a>Directory Structure</h2>
+<p><code>README.md</code>: this file<br>
+<code>test.c</code>: a test file which generates redundant store instructions
+<code>StoresRemoval/StoresRemoval.cpp</code>: the compiler pass implementation which erases redundant stores<br>
+<code>StoresRemoval/CMakeLists.txt</code>: a makefile to add this compiler pass to the LLVM compilation process<br>
+<code>StoresRemoval/StoresRemoval.exports</code>: an empty file, can be ignored</p>
+<h2><a id="Useless_Stores_Removal_a_Peephole_Optimization_Pass_21"></a>Useless Stores Removal: a Peephole Optimization Pass</h2>
+<p>The general idea when implementing this optimization is to store the operands of every store instruction and to erase store instructions which are storing values to an operand which is being overwritten in a later instruction within the same basic block. We handled this in the following steps</p>
+<ul>
+<li>First, we created a class inheriting the <code>BasicBlockPass</code> class which contains a <code>runOnBasicBlock</code> function which is called for every basic block in the compiled LLVM bitcode file</li>
+<li>For every basic block, we iterated through the instructions and checked the opcode of every instruction</li>
+<li>For every instruction with the <code>Store</code> opcode, we saved non-empty operands into a C++ <code>vector</code></li>
+<li>We then iterated through the instructions once again, checking the number of times the operand of a store instruction apppeared in the saved <code>vector</code> of non-empty operands from the previous step</li>
+<li>For every store instruction whose operand that appeared more than once in this <code>vector</code>, we erased that instruction and its operand from the saved <code>vector</code> of non-empty store operands</li>
+</ul>
+<p>This resulted in store instructions made redundant within a basic block to be removed from the basic block.</p>
+<p>We tested this on the LLVM bitcode file compiled from <code>test.c</code> and found redundant stores being removed.</p>
+<h2><a id="Note_36"></a>Note</h2>
+<p>We modified the version of the <code>Hello</code> LLVM compiler pass to create our StoresRemoval pass. In order to test our pass, please use the command - <code>opt -load $LLVM_LOC/build/lib/LLVMStoresRemoval.so -storesremoval2 -stats &lt; test.bc &gt; /dev/null</code>. Our actual StoresRemoval compiler pass is available when used with the <code>-storesremoval2</code> option. We also maintain a counter of erased instructions and print it out at the end.</p>
+<h2><a id="Sample_Output_41"></a>Sample Output</h2>
+<pre><code>$ opt -load ../../../LLVM/build/lib/LLVMStoresRemoval.so -storesremoval2 -stats &lt; test.bc &gt; /dev/null
+Erasing   store i32 %0, i32* @global, align 4
+Erasing   store i32 %1, i32* @global, align 4
+===-------------------------------------------------------------------------===
+                      ... Statistics Collected ...
+===-------------------------------------------------------------------------===
+
+2 storesremoval - Number of insts removed by DIE pass</code></pre>
+
+</body></html>
