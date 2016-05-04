@@ -31,7 +31,6 @@ using namespace std;
 
 #define DEBUG_TYPE "storesremoval"
 
-STATISTIC(StoresRemovalCounter, "Counts number of functions greeted");
 STATISTIC(DIEEliminated, "Number of insts removed by DIE pass");
 
 namespace {
@@ -41,7 +40,6 @@ namespace {
     StoresRemoval() : BasicBlockPass(ID) {}
 
     bool runOnBasicBlock(BasicBlock &F) override {
-      ++StoresRemovalCounter;
       errs() << "MyStoresRemoval: ";
       errs().write_escaped(F.getName()) << '\n';
       return false;
@@ -61,9 +59,8 @@ namespace {
     bool runOnBasicBlock(BasicBlock &blk) override {
       auto *TLIP = getAnalysisIfAvailable<TargetLibraryInfoWrapperPass>();
       TargetLibraryInfo *TLI = TLIP ? &TLIP->getTLI() : nullptr;
-      ++StoresRemovalCounter;
-      errs() << "StoresRemoval: ";
-      errs().write_escaped(blk.getName()) << '\n';
+      //errs() << "StoresRemoval: ";
+      //errs().write_escaped(blk.getName()) << '\n';
 
       bool Changed = false;
       // blk is a pointer to a BasicBlock instance
@@ -74,7 +71,7 @@ namespace {
       vector<StringRef> names;
       for (BasicBlock::iterator DI = blk.begin(); DI != blk.end(); ) {
         Instruction *Inst = &*DI++;
-        errs() << *Inst << "  :  ";
+        //errs() << *Inst << "  :  ";
         if (Inst->getOpcode() == Instruction::Store)  { 
           //errs()<<"store instruction operands: ";
           //errs() << *Inst << "  :  ";
@@ -90,7 +87,7 @@ namespace {
             names.push_back(str);
           } 
         }
-        errs() << "\n";
+        //errs() << "\n";
         //if (isInstructionTriviallyDead(Inst, TLI)) {
         //  errs() << "found trivial instruction!" << "\n";
         //  Inst->eraseFromParent();
